@@ -248,19 +248,20 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v6.1 | High-Precision Export</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v6.2 | High-Precision Export</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
     </div>
 
-    <!-- Modal de Exportação -->
+    <!-- Modal de Exportação / Importação -->
     <div id="export-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="card w-full max-w-2xl p-6 rounded-2xl border shadow-2xl relative">
-            <h2 class="text-xl font-bold mb-4 text-sky-500 uppercase tracking-tighter">Exportar / Backup</h2>
-            <!-- Reordenado: Dados do Projeto primeiro -->
+            <!-- Título alterado conforme solicitado -->
+            <h2 class="text-xl font-bold mb-4 text-sky-500 uppercase tracking-tighter">Exportar / Importar</h2>
             <div class="flex flex-wrap gap-2 mb-4 overflow-x-auto pb-2">
-                <button id="exp-data-btn" class="flex-1 min-w-[100px] py-2 bg-orange-600 text-white rounded-lg font-bold text-[9px] uppercase">DADOS DO PROJETO</button>
+                <!-- Botão de Dados renomeado para SALVAR COMO... -->
+                <button id="exp-data-btn" class="flex-1 min-w-[100px] py-2 bg-orange-600 text-white rounded-lg font-bold text-[9px] uppercase">SALVAR COMO...</button>
                 <button id="exp-img-btn" class="flex-1 min-w-[100px] py-2 bg-emerald-600 text-white rounded-lg font-bold text-[9px] uppercase">COMO IMAGEM</button>
                 <button id="exp-tab-btn" class="flex-1 min-w-[100px] py-2 bg-sky-500 text-white rounded-lg font-bold text-[9px] uppercase">COMO TABELA</button>
                 <button id="exp-mus-btn" class="flex-1 min-w-[100px] py-2 bg-indigo-600 text-white rounded-lg font-bold text-[9px] uppercase">COMO XML</button>
@@ -268,8 +269,9 @@
             </div>
             <div id="export-preview-container" class="mb-4">
                 <div id="data-controls" class="hidden flex flex-col gap-2 mb-2">
-                    <button id="import-btn" class="w-full py-2 bg-orange-500 text-white rounded-lg font-bold text-[10px] uppercase">Importar dados do projeto do txt</button>
-                    <p id="data-hint" class="text-[10px] opacity-50 italic text-center">Cole o conteúdo do backup abaixo para importar ou salve seu projeto no botão verde.</p>
+                    <!-- Botão renomeado para ABRIR -->
+                    <button id="import-btn" class="w-full py-2 bg-orange-500 text-white rounded-lg font-bold text-[10px] uppercase">ABRIR</button>
+                    <p id="data-hint" class="text-[10px] opacity-50 italic text-center">Cole o conteúdo do backup abaixo para abrir ou salve seu projeto no botão verde.</p>
                 </div>
                 <textarea id="export-text" class="w-full h-48 p-4 bg-slate-900/50 dark:bg-slate-900 border border-slate-700 rounded-xl font-mono text-xs mb-4" placeholder="Área de texto para importar dados..."></textarea>
                 <canvas id="export-canvas" class="hidden w-full border border-slate-700 rounded-xl bg-white"></canvas>
@@ -681,14 +683,12 @@
                 document.getElementById('download-img-btn').classList.remove('hidden');
                 document.getElementById('exp-img-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
             } else if (type === 'mus') {
-                // Não mostra os dados na tela, apenas botão para baixar
                 document.getElementById('download-mus-btn').classList.remove('hidden');
                 document.getElementById('exp-mus-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
             } else if (type === 'data') {
-                // Modo Backup: Mostra textarea para importar, mas oculta o conteúdo automático para salvar
                 exportTextArea.classList.remove('hidden');
                 exportTextArea.readOnly = false;
-                exportTextArea.value = ""; // Limpa para o usuário colar, se quiser importar
+                exportTextArea.value = ""; 
                 document.getElementById('data-controls').classList.remove('hidden');
                 document.getElementById('download-data-btn').classList.remove('hidden');
                 document.getElementById('exp-data-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
@@ -707,7 +707,7 @@
 
         document.getElementById('export-btn').onclick = () => {
             exportModal.classList.remove('hidden');
-            showExportView('data'); // Padrão agora é Dados do Projeto
+            showExportView('data'); 
         };
 
         document.getElementById('exp-img-btn').onclick = () => showExportView('img');
