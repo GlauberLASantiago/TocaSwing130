@@ -178,7 +178,7 @@
                 <p class="opacity-60 text-[10px] mt-1 uppercase tracking-wider">Criação Musical 1 — DAC/UFSCar</p>
                 <div class="mt-2 flex flex-col sm:flex-row gap-2 max-w-2xl">
                     <input type="text" id="work-title-input" placeholder="Título do Trabalho" class="flex-1 px-3 py-1 text-sm rounded-lg border outline-none">
-                    <input type="text" id="author-name-input" placeholder="Seu Nome" class="flex-1 px-3 py-1 text-sm rounded-lg border outline-none">
+                    <input type="text" id="author-name-input" placeholder="Nome do Aluno" class="flex-1 px-3 py-1 text-sm rounded-lg border outline-none">
                 </div>
             </div>
             
@@ -247,7 +247,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v6.4 | Smart Filenames</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v6.5 | File Export Fix</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -266,12 +266,13 @@
             </div>
             
             <div id="export-preview-container" class="mb-4">
+                <!-- Área de ação para dados do projeto -->
                 <div id="data-action-area" class="hidden flex flex-col items-center justify-center py-12 border-2 border-dashed border-slate-700 rounded-xl bg-slate-900/20">
                     <div class="flex gap-4">
                         <button id="download-project-btn" class="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-emerald-500 transition-all">Salvar Projeto (.txt)</button>
                         <button id="trigger-open-btn" class="px-6 py-3 bg-orange-500 text-white rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-orange-400 transition-all">Abrir Projeto (.txt)</button>
                     </div>
-                    <p class="mt-4 text-[10px] opacity-40 italic">O arquivo será baixado ou carregado do seu computador.</p>
+                    <p class="mt-4 text-[10px] opacity-40 italic">Os dados do projeto incluem: Título, Nome e Acordes.</p>
                     <input type="file" id="file-import-input" accept=".txt" class="hidden">
                 </div>
 
@@ -339,7 +340,7 @@
                 audioBuffers.set(url, buffer);
                 return buffer;
             } catch (e) {
-                console.error("Som erro:", url);
+                console.error("Erro som:", url);
                 return null;
             }
         }
@@ -535,8 +536,8 @@
             const mWidth = 140;
             const mHeight = 40;
             const padding = 20;
-            const workTitle = workTitleInput.value || "Trabalho Sem Título";
-            const author = authorNameInput.value || "Anônimo";
+            const workTitle = workTitleInput.value.trim() || "Trabalho Sem Título";
+            const author = authorNameInput.value.trim() || "Anônimo";
 
             exportCanvas.width = (cols * mWidth) + (padding * 2);
             exportCanvas.height = (rows * mHeight) + (padding * 2) + 70;
@@ -549,7 +550,7 @@
             ctx.fillText(workTitle, padding, padding + 25);
             ctx.font = '12px Inter, sans-serif';
             ctx.fillStyle = '#64748b';
-            ctx.fillText(`Autor: ${author} | DAC/UFSCar — Prof. Glauber Santiago`, padding, padding + 45);
+            ctx.fillText(`Autor: ${author}`, padding, padding + 45);
 
             sequence.forEach((item, i) => {
                 const x = padding + (i % cols) * mWidth;
@@ -572,8 +573,8 @@
         }
 
         function getTableExport() {
-            const workTitle = workTitleInput.value || "Trabalho Sem Título";
-            const author = authorNameInput.value || "Anônimo";
+            const workTitle = workTitleInput.value.trim() || "Trabalho Sem Título";
+            const author = authorNameInput.value.trim() || "Anônimo";
             let text = `// TRABALHO: ${workTitle}\n// AUTOR: ${author}\n`;
             text += "| Compasso | Acorde |\n|-----------|---------|\n";
             sequence.forEach((item, i) => {
@@ -583,8 +584,8 @@
         }
 
         function getBIABExport() {
-            const workTitle = workTitleInput.value || "Trabalho Sem Título";
-            const author = authorNameInput.value || "Anônimo";
+            const workTitle = workTitleInput.value.trim() || "Trabalho Sem Título";
+            const author = authorNameInput.value.trim() || "Anônimo";
             let chordsText = "|:a) ";
             sequence.forEach((item, i) => {
                 const cleanLabel = item.label.replace(/\(|\)/g, "");
@@ -594,8 +595,8 @@
         }
 
         function getXmlExport() {
-            const workTitle = workTitleInput.value || "Swing Harmony Project";
-            const author = authorNameInput.value || "Glauber Santiago";
+            const workTitle = workTitleInput.value.trim() || "Swing Harmony Project";
+            const author = authorNameInput.value.trim() || "Glauber Santiago";
             let xml = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
@@ -636,35 +637,52 @@
             return xml;
         }
 
+        // --- GESTÃO DO PROJETO (BACKUP) ---
         function getProjectData() {
             const data = {
-                title: workTitleInput.value,
-                author: authorNameInput.value,
-                sequence: sequence.map(item => ({ label: item.label, file: item.file }))
+                projeto: {
+                    identificacao: {
+                        titulo: workTitleInput.value.trim(),
+                        nome: authorNameInput.value.trim()
+                    },
+                    dados_harmonicos: sequence.map(item => ({ 
+                        label: item.label, 
+                        arquivo: item.file 
+                    }))
+                }
             };
-            return JSON.stringify(data);
+            return JSON.stringify(data, null, 2);
         }
 
         async function importProjectData(jsonStr) {
             try {
                 const data = JSON.parse(jsonStr);
-                if (!data.sequence) throw new Error("Invalido");
-                workTitleInput.value = data.title || "";
-                authorNameInput.value = data.author || "";
+                const info = data.projeto || data; // Retrocompatibilidade básica
+                
+                if (!info.dados_harmonicos && !info.sequence) throw new Error("Formato Inválido");
+                
+                const ident = info.identificacao || { titulo: info.title || "", nome: info.author || "" };
+                const acordes = info.dados_harmonicos || info.sequence;
+
+                workTitleInput.value = ident.titulo || "";
+                authorNameInput.value = ident.nome || "";
                 sequence = [];
-                statusText.innerText = "Lendo...";
-                for (const item of data.sequence) {
-                    const buffer = await loadSound(item.file);
+                statusText.innerText = "Carregando...";
+
+                for (const item of acordes) {
+                    const file = item.arquivo || item.file;
+                    const buffer = await loadSound(file);
                     if (buffer) {
-                        sequence.push({ label: item.label, buffer, file: item.file });
+                        sequence.push({ label: item.label, buffer, file: file });
                     }
                 }
+                
                 renderSequence();
                 statusText.innerText = "Pronto!";
-                setTimeout(() => statusText.innerText = "Pronto", 1500);
                 return true;
             } catch (e) {
-                statusText.innerText = "Erro!";
+                console.error(e);
+                statusText.innerText = "Erro no Arquivo";
                 return false;
             }
         }
@@ -716,7 +734,7 @@
         document.getElementById('exp-biab-btn').onclick = () => showExportView('biab');
         document.getElementById('exp-data-btn').onclick = () => showExportView('data');
 
-        // Lógica de Arquivo (Importar)
+        // Lógica de Abrir Projeto
         document.getElementById('trigger-open-btn').onclick = () => {
             fileImportInput.click();
         };
@@ -725,8 +743,8 @@
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = (event) => {
-                if (importProjectData(event.target.result)) {
+            reader.onload = async (event) => {
+                if (await importProjectData(event.target.result)) {
                     exportModal.classList.add('hidden');
                 }
                 fileImportInput.value = ''; 
@@ -734,7 +752,7 @@
             reader.readAsText(file);
         };
 
-        // Lógica de Arquivo (Salvar) - Nome ajustado pelo título
+        // Lógica de Salvar Projeto
         document.getElementById('download-project-btn').onclick = () => {
             const blob = new Blob([getProjectData()], { type: 'text/plain' });
             const link = document.createElement('a');
@@ -743,7 +761,6 @@
             link.click();
         };
 
-        // Download Imagem - Nome ajustado pelo título
         document.getElementById('download-img-btn').onclick = () => {
             const link = document.createElement('a');
             link.download = getSanitizedFilename('png');
@@ -751,7 +768,6 @@
             link.click();
         };
 
-        // Download MusicXML - Nome ajustado pelo título
         document.getElementById('download-mus-btn').onclick = () => {
             const blob = new Blob([getXmlExport()], { type: 'text/xml' });
             const link = document.createElement('a');
@@ -764,8 +780,9 @@
         document.getElementById('copy-btn').onclick = () => {
             exportTextArea.select();
             document.execCommand('copy');
+            const oldText = statusText.innerText;
             statusText.innerText = "COPIADO";
-            setTimeout(() => statusText.innerText = "Pronto", 1500);
+            setTimeout(() => statusText.innerText = oldText, 1500);
         };
 
         // --- PLAYBACK ---
