@@ -247,7 +247,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v6.5 | File Export Fix</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v6.6 | Fix Import System</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -266,13 +266,12 @@
             </div>
             
             <div id="export-preview-container" class="mb-4">
-                <!-- Área de ação para dados do projeto -->
                 <div id="data-action-area" class="hidden flex flex-col items-center justify-center py-12 border-2 border-dashed border-slate-700 rounded-xl bg-slate-900/20">
                     <div class="flex gap-4">
                         <button id="download-project-btn" class="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-emerald-500 transition-all">Salvar Projeto (.txt)</button>
                         <button id="trigger-open-btn" class="px-6 py-3 bg-orange-500 text-white rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-orange-400 transition-all">Abrir Projeto (.txt)</button>
                     </div>
-                    <p class="mt-4 text-[10px] opacity-40 italic">Os dados do projeto incluem: Título, Nome e Acordes.</p>
+                    <p class="mt-4 text-[10px] opacity-40 italic">O ficheiro de projeto contém o Título, Nome e Acordes.</p>
                     <input type="file" id="file-import-input" accept=".txt" class="hidden">
                 </div>
 
@@ -389,14 +388,12 @@
         const authorNameInput = document.getElementById('author-name-input');
         const fileImportInput = document.getElementById('file-import-input');
 
-        // Auxiliar para nome de arquivo sanitizado
         function getSanitizedFilename(extension) {
             const rawTitle = workTitleInput.value.trim();
             const sanitized = rawTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'projeto_swing';
             return `${sanitized}.${extension}`;
         }
 
-        // Controles UI
         document.getElementById('reverb-slider').addEventListener('input', (e) => {
             document.getElementById('reverb-val').innerText = e.target.value;
             updateReverbLevel(e.target.value);
@@ -411,7 +408,6 @@
                 : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
         });
 
-        // Gerar Grade
         noteData.forEach(note => {
             const label = document.createElement('div');
             label.className = 'flex items-center justify-center font-bold text-sky-500 card rounded note-label border';
@@ -491,7 +487,7 @@
                     overlay.innerHTML = `
                         <button class="bg-sky-500 hover:bg-sky-400 text-white">SUB</button>
                         <button class="bg-rose-500 hover:bg-rose-400 text-white">DEL</button>
-                        <button class="bg-slate-600 hover:bg-slate-500 text-white">X</button>
+                        <button class="bg-slate-600 hover:bg-slate-500 text-white font-mono">X</button>
                     `;
                     const [btnReplace, btnDelete, btnCancel] = overlay.querySelectorAll('button');
                     btnReplace.onclick = (e) => {
@@ -529,7 +525,6 @@
             });
         }
 
-        // --- EXPORTAR ---
         function generateImageExport() {
             const cols = 8;
             const rows = Math.ceil(sequence.length / cols);
@@ -613,7 +608,7 @@
                 else if (type === "9") kind = "dominant-ninth";
                 else if (type.includes("7") && type.includes("b9")) kind = "dominant";
                 else if (type === "m7") kind = "minor-seventh";
-                else if (type === "m7b5" || type === "m7(b5)") kind = "half-diminished";
+                else if (type === "m7b5" || type === "m7(b5)") kind = "half-dimidished";
                 else if (type === "dim7") kind = "diminished-seventh";
                 let step = root.charAt(0).toUpperCase();
                 let alter = root.includes("#") ? "1" : (root.includes("b") ? "-1" : "0");
@@ -637,7 +632,6 @@
             return xml;
         }
 
-        // --- GESTÃO DO PROJETO (BACKUP) ---
         function getProjectData() {
             const data = {
                 projeto: {
@@ -656,10 +650,13 @@
 
         async function importProjectData(jsonStr) {
             try {
-                const data = JSON.parse(jsonStr);
-                const info = data.projeto || data; // Retrocompatibilidade básica
+                // Inicia o contexto de áudio antes de carregar ficheiros
+                await initAudioContext();
                 
-                if (!info.dados_harmonicos && !info.sequence) throw new Error("Formato Inválido");
+                const data = JSON.parse(jsonStr);
+                const info = data.projeto || data;
+                
+                if (!info.dados_harmonicos && !info.sequence) throw new Error("Ficheiro Inválido");
                 
                 const ident = info.identificacao || { titulo: info.title || "", nome: info.author || "" };
                 const acordes = info.dados_harmonicos || info.sequence;
@@ -667,7 +664,7 @@
                 workTitleInput.value = ident.titulo || "";
                 authorNameInput.value = ident.nome || "";
                 sequence = [];
-                statusText.innerText = "Carregando...";
+                statusText.innerText = "Lendo...";
 
                 for (const item of acordes) {
                     const file = item.arquivo || item.file;
@@ -682,7 +679,7 @@
                 return true;
             } catch (e) {
                 console.error(e);
-                statusText.innerText = "Erro no Arquivo";
+                statusText.innerText = "Erro ao Abrir";
                 return false;
             }
         }
@@ -734,7 +731,6 @@
         document.getElementById('exp-biab-btn').onclick = () => showExportView('biab');
         document.getElementById('exp-data-btn').onclick = () => showExportView('data');
 
-        // Lógica de Abrir Projeto
         document.getElementById('trigger-open-btn').onclick = () => {
             fileImportInput.click();
         };
@@ -752,7 +748,6 @@
             reader.readAsText(file);
         };
 
-        // Lógica de Salvar Projeto
         document.getElementById('download-project-btn').onclick = () => {
             const blob = new Blob([getProjectData()], { type: 'text/plain' });
             const link = document.createElement('a');
@@ -785,7 +780,6 @@
             setTimeout(() => statusText.innerText = oldText, 1500);
         };
 
-        // --- PLAYBACK ---
         function play() {
             if (!sequence.length || isPlaying) return;
             isPlaying = true;
