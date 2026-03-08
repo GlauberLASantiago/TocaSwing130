@@ -33,7 +33,6 @@
             color: #f1f5f9;
             border-color: #334155;
         }
-        /* Ajuste: Efeito hover para botões no modo escuro */
         .dark .chord-btn:hover {
             background-color: #0ea5e9;
             color: white;
@@ -139,7 +138,6 @@
             background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%) !important;
         }
 
-        /* Feedback visual no hover para botões já destacados */
         .chord-btn.highlight-major:hover,
         .chord-btn.highlight-minor:hover {
             filter: brightness(1.15);
@@ -288,6 +286,10 @@
                 <button id="toggle-degree-view" class="px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-sky-500">
                     Visualização em cifragem por graus, em dó
                 </button>
+                <!-- Novo: Botão de Autoplay Mode -->
+                <button id="toggle-autoplay-mode" class="px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-amber-500">
+                    Modo Preview (Autoplay)
+                </button>
             </section>
         </main>
 
@@ -300,7 +302,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.1 | Reverb & Theme Fix</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.2 | Autoplay Mode</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -444,6 +446,7 @@
         let isMajorFieldActive = false;
         let isMinorFieldActive = false;
         let isDegreeViewActive = false;
+        let isAutoplayActive = false;
 
         const gridContainer = document.getElementById('grid-container');
         const sequenceList = document.getElementById('sequence-list');
@@ -494,7 +497,11 @@
                             btn.dataset.chord = fullLabel;
                             btn.innerText = getDisplayLabel(fullLabel);
                             const fileName = `swing130_${note.file}${type.suffix}.mp3`;
-                            btn.onclick = async () => { await initAudioContext(); addOrReplaceChord(fullLabel, fileName); };
+                            btn.onclick = async () => { 
+                                await initAudioContext(); 
+                                if (isAutoplayActive) playPreview(fullLabel, fileName);
+                                addOrReplaceChord(fullLabel, fileName); 
+                            };
                             cell.appendChild(btn);
                         });
                     } else {
@@ -504,13 +511,40 @@
                         btn.dataset.chord = fullLabel;
                         btn.innerText = getDisplayLabel(fullLabel);
                         const fileName = `swing130_${note.file}${type.suffix}.mp3`;
-                        btn.onclick = async () => { await initAudioContext(); addOrReplaceChord(fullLabel, fileName); };
+                        btn.onclick = async () => { 
+                            await initAudioContext(); 
+                            if (isAutoplayActive) playPreview(fullLabel, fileName);
+                            addOrReplaceChord(fullLabel, fileName); 
+                        };
                         cell.appendChild(btn);
                     }
                     gridContainer.appendChild(cell);
                 });
             });
             updateUIState();
+        }
+
+        // Função para tocar uma prévia rápida (Autoplay)
+        async function playPreview(label, file) {
+            const buffer = await loadSound(file);
+            if (!buffer) return;
+
+            const source = audioCtx.createBufferSource();
+            const gain = audioCtx.createGain();
+            source.buffer = buffer;
+
+            const now = audioCtx.currentTime;
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(1, now + 0.01);
+            gain.gain.setValueAtTime(1, now + 1.2);
+            gain.gain.linearRampToValueAtTime(0, now + 1.5);
+
+            source.connect(gain);
+            gain.connect(masterGain);
+            if (reverbNode) gain.connect(reverbNode);
+
+            source.start(now);
+            source.stop(now + 1.5);
         }
 
         function updateUIState() {
@@ -526,6 +560,7 @@
             const btnMajor = document.getElementById('toggle-major-field');
             const btnMinor = document.getElementById('toggle-minor-field');
             const btnDegree = document.getElementById('toggle-degree-view');
+            const btnAutoplay = document.getElementById('toggle-autoplay-mode');
             
             btnMajor.className = isMajorFieldActive 
                 ? 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all bg-blue-500 text-white'
@@ -538,6 +573,10 @@
             btnDegree.className = isDegreeViewActive 
                 ? 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all bg-sky-500 text-white'
                 : 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-sky-500';
+
+            btnAutoplay.className = isAutoplayActive 
+                ? 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all bg-amber-500 text-white'
+                : 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-amber-500';
 
             renderSequence();
         }
@@ -555,6 +594,7 @@
         document.getElementById('toggle-major-field').onclick = () => { isMajorFieldActive = !isMajorFieldActive; updateUIState(); };
         document.getElementById('toggle-minor-field').onclick = () => { isMinorFieldActive = !isMinorFieldActive; updateUIState(); };
         document.getElementById('toggle-degree-view').onclick = () => { isDegreeViewActive = !isDegreeViewActive; updateUIState(); };
+        document.getElementById('toggle-autoplay-mode').onclick = () => { isAutoplayActive = !isAutoplayActive; updateUIState(); };
 
         document.getElementById('reverb-slider').oninput = (e) => {
             document.getElementById('reverb-val').innerText = e.target.value;
@@ -719,7 +759,7 @@
             let xml = `<?xml version="1.0" encoding="UTF-8"?><score-partwise version="3.1"><work><work-title>${title}</work-title></work><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list><part id="P1">`;
             sequence.forEach((item, i) => {
                 const match = item.label.match(/^([A-G][#b]?)(.*)$/);
-                let root = match ? match[1] : "C", type = match ? match[2] : "", step = root.charAt(0), alter = root.includes("#")?"1":(root.includes("b")?"-1":"0");
+                let root = match[1], type = match[2], step = root.charAt(0), alter = root.includes("#")?"1":(root.includes("b")?"-1":"0");
                 let kind = type==="maj7"?"major-seventh":type==="9"?"dominant-ninth":type.includes("m7")?"minor-seventh":"major";
                 xml += `<measure number="${i+1}">${i===0?`<attributes><divisions>1</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>` : ""}<harmony><root><root-step>${step}</root-step>${alter!=="0"?`<root-alter>${alter}</root-alter>` : ""}</root><kind>${kind}</kind></harmony><note><rest/><duration>4</duration><type>whole</type></note></measure>`;
             });
