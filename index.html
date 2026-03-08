@@ -554,7 +554,17 @@
         function getBIABExport() {
             let chordsText = "|:a) ";
             sequence.forEach((item, i) => {
-                const cleanLabel = item.label.replace(/\(|\)/g, "");
+                // 1. Remove enarmonias de bemol, deixando apenas os sustenidos
+                let cleanLabel = item.label
+                    .replace("A#/Bb", "A#")
+                    .replace("G#/Ab", "G#")
+                    .replace("F#/Gb", "F#")
+                    .replace("D#/Eb", "D#")
+                    .replace("C#/Db", "C#");
+                
+                // 2. Remove parênteses para compatibilidade com Band in a Box
+                cleanLabel = cleanLabel.replace(/\(|\)/g, "");
+                
                 chordsText += cleanLabel + "| ";
             });
             
