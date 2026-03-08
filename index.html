@@ -190,6 +190,10 @@
             height: 18px;
             border-radius: 2px;
         }
+
+        #export-modal {
+            transition: opacity 0.3s ease;
+        }
     </style>
 </head>
 <body class="dark p-1 md:p-4">
@@ -199,8 +203,8 @@
                 <h1 class="text-2xl font-bold text-sky-500 tracking-tight leading-none">Tocador de Acordes: Swing 130</h1>
                 <p class="opacity-60 text-[10px] mt-1 uppercase tracking-wider">Criação Musical 1 — DAC/UFSCar</p>
                 <div class="mt-2 flex flex-col sm:flex-row gap-2 max-w-2xl">
-                    <input type="text" id="work-title-input" placeholder="Título do Trabalho" class="flex-1 px-3 py-1 text-sm rounded-lg border outline-none">
-                    <input type="text" id="author-name-input" placeholder="Nome do Aluno" class="flex-1 px-3 py-1 text-sm rounded-lg border outline-none">
+                    <input type="text" id="work-title-input" placeholder="Título do Trabalho" class="flex-1 px-3 py-1 text-sm rounded-lg border outline-none shadow-inner">
+                    <input type="text" id="author-name-input" placeholder="Nome do Aluno" class="flex-1 px-3 py-1 text-sm rounded-lg border outline-none shadow-inner">
                 </div>
             </div>
             
@@ -281,7 +285,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.0 | Theme & Import Fix</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.1 | Reverb & Theme Fix</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -305,7 +309,7 @@
                         <button id="download-project-btn" class="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-emerald-500 transition-all">Salvar Projeto (.txt)</button>
                         <button id="trigger-open-btn" class="px-6 py-3 bg-orange-500 text-white rounded-xl font-bold text-xs uppercase shadow-lg hover:bg-orange-400 transition-all">Abrir Projeto (.txt)</button>
                     </div>
-                    <p class="mt-4 text-[10px] opacity-40 italic text-center">Ficheiro inclui Título, Nome e Sequência.</p>
+                    <p class="mt-4 text-[10px] opacity-40 italic text-center">O ficheiro de projeto contém o Título, Nome e Sequência.</p>
                     <input type="file" id="file-import-input" accept=".txt" class="hidden">
                 </div>
 
@@ -323,7 +327,7 @@
     </div>
 
     <script>
-        // --- AUDIO ENGINE ---
+        // --- MOTOR DE ÁUDIO ---
         let audioCtx = null;
         const audioBuffers = new Map();
         let masterGain = null;
@@ -338,19 +342,23 @@
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 masterGain = audioCtx.createGain();
                 masterGain.connect(audioCtx.destination);
+                
                 reverbNode = audioCtx.createConvolver();
                 reverbGain = audioCtx.createGain();
-                reverbNode.buffer = createImpulse(1.8, 2.2); 
+                reverbNode.buffer = createImpulse(2.0, 1.8); // Duração e decay ajustados
+                
                 reverbNode.connect(reverbGain);
                 reverbGain.connect(masterGain);
+                
                 updateReverbLevel(document.getElementById('reverb-slider').value);
             }
             if (audioCtx.state === 'suspended') await audioCtx.resume();
         }
 
         function createImpulse(duration, decay) {
-            const length = audioCtx.sampleRate * duration;
-            const buffer = audioCtx.createBuffer(2, length, audioCtx.sampleRate);
+            const sampleRate = audioCtx.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = audioCtx.createBuffer(2, length, sampleRate);
             for (let channel = 0; channel < 2; channel++) {
                 const data = buffer.getChannelData(channel);
                 for (let i = 0; i < length; i++) {
@@ -361,7 +369,8 @@
         }
 
         function updateReverbLevel(val) {
-            if (reverbGain) reverbGain.gain.setTargetAtTime(val / 150, audioCtx.currentTime, 0.05);
+            // Ganho do reverb aumentado para ser mais audível
+            if (reverbGain) reverbGain.gain.setTargetAtTime(val / 80, audioCtx.currentTime, 0.05);
         }
 
         async function loadSound(url) {
@@ -378,7 +387,7 @@
             }
         }
 
-        // --- MUSICAL DATA ---
+        // --- DADOS MUSICAIS ---
         const noteData = [
             { display: 'B', file: 'b' },
             { display: 'A#/Bb', file: 'as' },
@@ -450,12 +459,12 @@
             return `${sanitized}.${extension}`;
         }
 
-        // --- UI RENDER ---
+        // --- GESTÃO DA GRADE ---
         function generateGrid() {
             gridContainer.innerHTML = '';
             noteData.forEach(note => {
                 const labelDiv = document.createElement('div');
-                labelDiv.className = 'flex items-center justify-center note-label card rounded border';
+                labelDiv.className = 'flex items-center justify-center note-label card rounded border transition-colors';
                 labelDiv.innerText = note.display;
                 gridContainer.appendChild(labelDiv);
 
@@ -467,7 +476,7 @@
                         parts.forEach(p => {
                             const btn = document.createElement('button');
                             const fullLabel = p + type.label;
-                            btn.className = 'chord-btn rounded font-semibold border-b shadow-sm transition-all hover:bg-sky-500 hover:text-white flex-1 text-[7px] p-0';
+                            btn.className = 'chord-btn rounded font-semibold border-b shadow-sm transition-all flex-1 text-[7px] p-0';
                             btn.dataset.chord = fullLabel;
                             btn.innerText = getDisplayLabel(fullLabel);
                             const fileName = `swing130_${note.file}${type.suffix}.mp3`;
@@ -477,7 +486,7 @@
                     } else {
                         const btn = document.createElement('button');
                         const fullLabel = note.display + type.label;
-                        btn.className = 'chord-btn rounded font-semibold border-b shadow-sm transition-all hover:bg-sky-500 hover:text-white w-full';
+                        btn.className = 'chord-btn rounded font-semibold border-b shadow-sm transition-all w-full';
                         btn.dataset.chord = fullLabel;
                         btn.innerText = getDisplayLabel(fullLabel);
                         const fileName = `swing130_${note.file}${type.suffix}.mp3`;
@@ -532,6 +541,11 @@
         document.getElementById('toggle-major-field').onclick = () => { isMajorFieldActive = !isMajorFieldActive; updateUIState(); };
         document.getElementById('toggle-minor-field').onclick = () => { isMinorFieldActive = !isMinorFieldActive; updateUIState(); };
         document.getElementById('toggle-degree-view').onclick = () => { isDegreeViewActive = !isDegreeViewActive; updateUIState(); };
+
+        document.getElementById('reverb-slider').oninput = (e) => {
+            document.getElementById('reverb-val').innerText = e.target.value;
+            updateReverbLevel(e.target.value);
+        };
 
         async function addOrReplaceChord(label, file) {
             if (isPlaying) return;
@@ -591,7 +605,7 @@
             });
         }
 
-        // --- EXPORT LOGIC ---
+        // --- EXPORTAR ---
         function generateImageExport() {
             const cols = 8;
             const rows = Math.ceil(sequence.length / cols);
@@ -639,7 +653,7 @@
                 await initAudioContext();
                 const data = JSON.parse(jsonStr);
                 const info = data.projeto || data;
-                if (!info.dados_harmonicos && !info.sequence) throw new Error("Ficheiro Inválido");
+                if (!info.dados_harmonicos && !info.sequence) throw new Error("Inválido");
                 const ident = info.identificacao || { titulo: info.title || "", nome: info.author || "" };
                 const acordes = info.dados_harmonicos || info.sequence;
                 workTitleInput.value = ident.titulo || "";
@@ -660,7 +674,7 @@
             }
         }
 
-        // --- MODAL & BUTTONS ---
+        // --- BOTÕES MODAL ---
         document.getElementById('export-btn').onclick = () => { exportModal.classList.remove('hidden'); showExportView('data'); };
         document.getElementById('exp-img-btn').onclick = () => showExportView('img');
         document.getElementById('exp-mus-btn').onclick = () => showExportView('mus');
@@ -687,7 +701,6 @@
         };
 
         document.getElementById('download-mus-btn').onclick = () => {
-            // Lógica MusicXML resumida para brevidade, mas completa funcionalmente
             const title = workTitleInput.value || "Swing Project";
             let xml = `<?xml version="1.0" encoding="UTF-8"?><score-partwise version="3.1"><work><work-title>${title}</work-title></work><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list><part id="P1">`;
             sequence.forEach((item, i) => {
@@ -741,7 +754,12 @@
                 const source = audioCtx.createBufferSource(); const gain = audioCtx.createGain();
                 source.buffer = item.buffer;
                 gain.gain.setValueAtTime(0, time); gain.gain.linearRampToValueAtTime(1, time + 0.01); gain.gain.setValueAtTime(1, time + MEASURE_DURATION - 0.05); gain.gain.linearRampToValueAtTime(0, stopT);
-                source.connect(gain); gain.connect(masterGain); if (reverbNode) gain.connect(reverbNode);
+                
+                // Liga o reverb
+                source.connect(gain);
+                gain.connect(masterGain); // Sinal Seco
+                if (reverbNode) gain.connect(reverbNode); // Sinal com Reverb
+                
                 source.start(time); source.stop(stopT); activeNodes.push({source, gain});
                 visualTimers.push(setTimeout(() => highlight(i), (time - now) * 1000));
             });
