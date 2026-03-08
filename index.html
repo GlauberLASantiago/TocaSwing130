@@ -33,8 +33,13 @@
             color: #f1f5f9;
             border-color: #334155;
         }
+        .dark input[type="text"] {
+            background-color: #1e293b;
+            color: #f1f5f9;
+            border-color: #334155;
+        }
 
-        /* Tema Claro (Utilizando #D4CFC9 como base mais clara) */
+        /* Tema Claro */
         .light {
             background-color: #BDB7B0; 
             color: #1e293b;
@@ -65,22 +70,25 @@
         .light input[type=range] {
             background-color: #BDB7B0;
         }
+        .light input[type="text"] {
+            background-color: #E2DDD7;
+            color: #1e293b;
+            border-color: #A39D95;
+        }
 
-        /* Grid Ultra Compacto para a Tabela de Acordes */
+        /* Grid Ultra Compacto */
         .chord-grid {
             display: grid;
             grid-template-columns: 70px repeat(6, 1fr);
             gap: 2px;
         }
 
-        /* 8 compassos por linha */
         .measure-grid {
             display: grid;
             grid-template-columns: repeat(8, 1fr);
             gap: 2px;
         }
 
-        /* Blocos ULTRA compactos */
         .sequence-item {
             height: 30px; 
             display: flex;
@@ -169,6 +177,8 @@
             <div>
                 <h1 class="text-2xl font-bold text-sky-500 tracking-tight leading-none">Tocador de Acordes: Swing 130</h1>
                 <p class="opacity-60 text-[10px] mt-1 uppercase tracking-wider">Criação Musical 1 — DAC/UFSCar</p>
+                <!-- Novo: Campo de Título do Trabalho -->
+                <input type="text" id="work-title-input" placeholder="Digite o título do trabalho aqui..." class="mt-2 w-full max-w-md px-3 py-1 text-sm rounded-lg border focus:ring-1 focus:ring-sky-500 outline-none transition-all">
             </div>
             
             <div class="flex flex-wrap items-center gap-2 card p-2 rounded-xl border">
@@ -214,7 +224,7 @@
                 </div>
             </section>
 
-            <!-- Painel de Acordes Ultra Compacto -->
+            <!-- Painel de Acordes -->
             <section class="card p-2 rounded-xl border overflow-x-auto">
                 <div class="chord-grid min-w-[850px]">
                     <div class="p-1"></div>
@@ -239,7 +249,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v5.9 | High-Density View</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v6.0 | Projeto & Backup</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -248,15 +258,20 @@
     <!-- Modal de Exportação -->
     <div id="export-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="card w-full max-w-2xl p-6 rounded-2xl border shadow-2xl relative">
-            <h2 class="text-xl font-bold mb-4 text-sky-500 uppercase tracking-tighter">Exportar Sequência</h2>
-            <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
+            <h2 class="text-xl font-bold mb-4 text-sky-500 uppercase tracking-tighter">Exportar / Backup</h2>
+            <div class="flex flex-wrap gap-2 mb-4 overflow-x-auto pb-2">
                 <button id="exp-img-btn" class="flex-1 min-w-[100px] py-2 bg-emerald-600 text-white rounded-lg font-bold text-[9px] uppercase">COMO IMAGEM</button>
                 <button id="exp-mus-btn" class="flex-1 min-w-[100px] py-2 bg-indigo-600 text-white rounded-lg font-bold text-[9px] uppercase">COMO XML</button>
                 <button id="exp-tab-btn" class="flex-1 min-w-[100px] py-2 bg-sky-500 text-white rounded-lg font-bold text-[9px] uppercase">COMO TABELA</button>
                 <button id="exp-biab-btn" class="flex-1 min-w-[100px] py-2 bg-slate-700 text-white rounded-lg font-bold text-[9px] uppercase">COMO BIAB</button>
+                <!-- Novo: Botão de Dados do Projeto -->
+                <button id="exp-data-btn" class="flex-1 min-w-[100px] py-2 bg-orange-600 text-white rounded-lg font-bold text-[9px] uppercase">DADOS DO PROJETO</button>
             </div>
             <div id="export-preview-container" class="mb-4">
-                <textarea id="export-text" class="w-full h-48 p-4 bg-slate-900/50 dark:bg-slate-900 border border-slate-700 rounded-xl font-mono text-sm mb-4" readonly></textarea>
+                <div id="data-controls" class="hidden flex gap-2 mb-2">
+                    <button id="import-btn" class="flex-1 py-1.5 bg-orange-500 text-white rounded-lg font-bold text-[10px] uppercase">IMPORTAR DADOS ABAIXO</button>
+                </div>
+                <textarea id="export-text" class="w-full h-48 p-4 bg-slate-900/50 dark:bg-slate-900 border border-slate-700 rounded-xl font-mono text-xs mb-4" placeholder="Cole os dados aqui para importar..."></textarea>
                 <canvas id="export-canvas" class="hidden w-full border border-slate-700 rounded-xl bg-white"></canvas>
             </div>
             <div class="flex gap-2">
@@ -365,6 +380,7 @@
         const exportModal = document.getElementById('export-modal');
         const exportTextArea = document.getElementById('export-text');
         const exportCanvas = document.getElementById('export-canvas');
+        const workTitleInput = document.getElementById('work-title-input');
 
         // Controles UI
         document.getElementById('reverb-slider').addEventListener('input', (e) => {
@@ -381,7 +397,7 @@
                 : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
         });
 
-        // Gerar Grade Compacta com divisão de enarmonia
+        // Gerar Grade
         noteData.forEach(note => {
             const label = document.createElement('div');
             label.className = 'flex items-center justify-center font-bold text-sky-500 card rounded note-label border';
@@ -430,10 +446,10 @@
             const buffer = await loadSound(file);
             if (buffer) {
                 if (editingIndex !== null) {
-                    sequence[editingIndex] = { label, buffer };
+                    sequence[editingIndex] = { label, buffer, file };
                     editingIndex = null;
                 } else {
-                    sequence.push({ label, buffer });
+                    sequence.push({ label, buffer, file });
                 }
                 statusText.innerText = "OK";
                 renderSequence();
@@ -521,6 +537,7 @@
             const mWidth = 140;
             const mHeight = 40;
             const padding = 20;
+            const workTitle = workTitleInput.value || "Trabalho Sem Título";
             
             exportCanvas.width = (cols * mWidth) + (padding * 2);
             exportCanvas.height = (rows * mHeight) + (padding * 2) + 60;
@@ -532,10 +549,10 @@
             
             ctx.fillStyle = '#0ea5e9';
             ctx.font = 'bold 24px Inter, sans-serif';
-            ctx.fillText('Tocador de Acordes: Swing 130', padding, padding + 25);
+            ctx.fillText(workTitle, padding, padding + 25);
             ctx.font = '12px Inter, sans-serif';
             ctx.fillStyle = '#64748b';
-            ctx.fillText('DAC/UFSCar - Professor Glauber Santiago', padding, padding + 45);
+            ctx.fillText('Criação Musical 1 — DAC/UFSCar — Prof. Glauber Santiago', padding, padding + 45);
 
             sequence.forEach((item, i) => {
                 const x = padding + (i % cols) * mWidth;
@@ -549,7 +566,7 @@
                 ctx.fillRect(x + mWidth - 7, y, 3, mHeight - 4);
                 
                 ctx.fillStyle = '#94a3b8';
-                ctx.font = 'bold 12px monospace';
+                ctx.font = 'bold 16px monospace';
                 ctx.fillText(i + 1, x + 3, y + 15);
                 
                 ctx.fillStyle = '#1e293b';
@@ -563,7 +580,9 @@
         }
 
         function getTableExport() {
-            let text = "| Compasso | Acorde |\n|-----------|---------|\n";
+            const workTitle = workTitleInput.value || "Trabalho Sem Título";
+            let text = `// TRABALHO: ${workTitle}\n`;
+            text += "| Compasso | Acorde |\n|-----------|---------|\n";
             sequence.forEach((item, i) => {
                 text += `| ${i + 1} | ${item.label} |\n`;
             });
@@ -571,21 +590,23 @@
         }
 
         function getBIABExport() {
+            const workTitle = workTitleInput.value || "Trabalho Sem Título";
             let chordsText = "|:a) ";
             sequence.forEach((item, i) => {
                 const cleanLabel = item.label.replace(/\(|\)/g, "");
                 chordsText += cleanLabel + "| ";
             });
             
-            return `[Song]\n[Chords]\n${chordsText.trim()}\n[ChordsEnd]\n[SongEnd]`;
+            return `// TRABALHO: ${workTitle}\n[Song]\n[Chords]\n${chordsText.trim()}\n[ChordsEnd]\n[SongEnd]`;
         }
 
-        // --- EXPORTAR XML (MusicXML) ---
+        // --- EXPORTAR XML (MusicXML) em 4/4 ---
         function getXmlExport() {
+            const workTitle = workTitleInput.value || "Swing Harmony Project";
             let xml = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
-  <work><work-title>Swing 130 Harmony</work-title></work>
+  <work><work-title>${workTitle}</work-title></work>
   <identification><creator type="composer">Glauber Santiago</creator></identification>
   <part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
   <part id="P1">`;
@@ -612,7 +633,7 @@
       <attributes>
         <divisions>1</divisions>
         <key><fifths>0</fifths></key>
-        <time><beats>2</beats><beat-type>4</beat-type></time>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
         <clef>
           <sign>G</sign>
           <line>2</line>
@@ -627,8 +648,8 @@
       </harmony>
       <note>
         <rest/>
-        <duration>2</duration>
-        <type>half</type>
+        <duration>4</duration>
+        <type>whole</type>
       </note>
     </measure>`;
             });
@@ -639,14 +660,51 @@
             return xml;
         }
 
+        // --- IMPORTAR / EXPORTAR DADOS (JSON) ---
+        function getProjectData() {
+            const data = {
+                title: workTitleInput.value,
+                sequence: sequence.map(item => ({ label: item.label, file: item.file }))
+            };
+            return JSON.stringify(data);
+        }
+
+        async function importProjectData(jsonStr) {
+            try {
+                const data = JSON.parse(jsonStr);
+                if (!data.sequence) throw new Error("Formato inválido");
+                
+                workTitleInput.value = data.title || "";
+                sequence = [];
+                statusText.innerText = "Importando...";
+                
+                for (const item of data.sequence) {
+                    const buffer = await loadSound(item.file);
+                    if (buffer) {
+                        sequence.push({ label: item.label, buffer, file: item.file });
+                    }
+                }
+                
+                renderSequence();
+                statusText.innerText = "Importado!";
+                setTimeout(() => statusText.innerText = "Pronto", 1500);
+                return true;
+            } catch (e) {
+                statusText.innerText = "Erro nos dados";
+                return false;
+            }
+        }
+
         function showExportView(type) {
             exportTextArea.classList.add('hidden');
             exportCanvas.classList.add('hidden');
+            document.getElementById('data-controls').classList.add('hidden');
             document.getElementById('copy-btn').classList.add('hidden');
             document.getElementById('download-img-btn').classList.add('hidden');
             document.getElementById('download-mus-btn').classList.add('hidden');
+            exportTextArea.readOnly = true;
 
-            [ 'exp-img-btn', 'exp-tab-btn', 'exp-biab-btn', 'exp-mus-btn' ].forEach(id => {
+            [ 'exp-img-btn', 'exp-tab-btn', 'exp-biab-btn', 'exp-mus-btn', 'exp-data-btn' ].forEach(id => {
                 document.getElementById(id).classList.remove('ring-2', 'ring-white', 'opacity-100');
                 document.getElementById(id).classList.add('opacity-80');
             });
@@ -660,6 +718,13 @@
                 exportTextArea.value = getXmlExport();
                 document.getElementById('download-mus-btn').classList.remove('hidden');
                 document.getElementById('exp-mus-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
+            } else if (type === 'data') {
+                exportTextArea.classList.remove('hidden');
+                exportTextArea.readOnly = false;
+                exportTextArea.value = getProjectData();
+                document.getElementById('data-controls').classList.remove('hidden');
+                document.getElementById('copy-btn').classList.remove('hidden');
+                document.getElementById('exp-data-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
             } else {
                 exportTextArea.classList.remove('hidden');
                 document.getElementById('copy-btn').classList.remove('hidden');
@@ -674,19 +739,23 @@
         }
 
         document.getElementById('export-btn').onclick = () => {
-            if (sequence.length === 0) return;
             exportModal.classList.remove('hidden');
-            showExportView('img'); 
+            showExportView(sequence.length > 0 ? 'img' : 'data'); 
         };
 
         document.getElementById('exp-img-btn').onclick = () => showExportView('img');
         document.getElementById('exp-mus-btn').onclick = () => showExportView('mus');
         document.getElementById('exp-tab-btn').onclick = () => showExportView('tab');
         document.getElementById('exp-biab-btn').onclick = () => showExportView('biab');
+        document.getElementById('exp-data-btn').onclick = () => showExportView('data');
+
+        document.getElementById('import-btn').onclick = () => {
+            importProjectData(exportTextArea.value);
+        };
 
         document.getElementById('download-img-btn').onclick = () => {
             const link = document.createElement('a');
-            link.download = 'sequencia-swing-130.png';
+            link.download = `sequencia-${Date.now()}.png`;
             link.href = exportCanvas.toDataURL('image/png');
             link.click();
         };
@@ -694,7 +763,7 @@
         document.getElementById('download-mus-btn').onclick = () => {
             const blob = new Blob([getXmlExport()], { type: 'text/xml' });
             const link = document.createElement('a');
-            link.download = 'harmonia-swing.musicxml';
+            link.download = 'harmonia.musicxml';
             link.href = URL.createObjectURL(blob);
             link.click();
         };
