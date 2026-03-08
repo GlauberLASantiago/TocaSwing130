@@ -203,6 +203,7 @@
             </div>
             
             <div class="flex flex-wrap items-center gap-2 card p-2 rounded-xl border">
+                <!-- Controle de Reverb -->
                 <div class="flex items-center gap-2 px-2 border-r border-slate-700/30 pr-3">
                     <label class="text-[8px] uppercase opacity-50 font-bold">Reverb</label>
                     <input type="range" id="reverb-slider" min="0" max="100" value="25" class="w-20 h-1 rounded-lg appearance-none cursor-pointer">
@@ -264,6 +265,10 @@
                 <button id="toggle-minor-field" class="px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-emerald-500">
                     Campo harmônico menor de dó
                 </button>
+                <!-- Novo: Botão de visualização por graus -->
+                <button id="toggle-degree-view" class="px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-sky-500">
+                    Visualização em cifragem por graus, em dó
+                </button>
             </section>
         </main>
 
@@ -276,7 +281,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v6.7 | Field Label Correction</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v6.8 | Harmonic Degree Analysis</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -398,7 +403,13 @@
             { suffix: 'dim7', label: 'dim7' }
         ];
 
-        // Definição dos Grupos de Campo Harmônico (Ajustados)
+        // Mapeamento para Cifragem por Graus (Dó)
+        const degreeMap = {
+            'C': 'I', 'C#': '#I', 'Db': 'bII', 'D': 'II', 'D#': '#II', 'Eb': 'bIII',
+            'E': 'III', 'F': 'IV', 'F#': '#IV', 'Gb': 'bV', 'G': 'V', 'G#': '#V',
+            'Ab': 'bVI', 'A': 'VI', 'A#': '#VI', 'Bb': 'bVII', 'B': 'VII'
+        };
+
         const majorFieldChords = ['Cmaj7', 'Dm7', 'Em7', 'Fmaj7', 'G9', 'Am7', 'Bm7(b5)'];
         const minorFieldChords = ['Cm7', 'Dbmaj7', 'Dm7(b5)', 'Ebmaj7', 'Fm7', 'G7(b9)', 'Abmaj7', 'Bb9', 'Bbmaj7', 'Bdim7'];
 
@@ -408,6 +419,7 @@
         let menuActiveIndex = null; 
         let isMajorFieldActive = false;
         let isMinorFieldActive = false;
+        let isDegreeViewActive = false;
 
         const gridContainer = document.getElementById('grid-container');
         const sequenceList = document.getElementById('sequence-list');
@@ -420,6 +432,17 @@
         const workTitleInput = document.getElementById('work-title-input');
         const authorNameInput = document.getElementById('author-name-input');
         const fileImportInput = document.getElementById('file-import-input');
+
+        // Função de conversão para display
+        function getDisplayLabel(chordLabel) {
+            if (!isDegreeViewActive) return chordLabel;
+            const match = chordLabel.match(/^([A-Ga-g][#b]?)(.*)$/);
+            if (!match) return chordLabel;
+            const root = match[1];
+            const type = match[2];
+            const degree = degreeMap[root] || root;
+            return degree + type;
+        }
 
         function getSanitizedFilename(extension) {
             const rawTitle = workTitleInput.value.trim();
@@ -485,50 +508,52 @@
             });
         });
 
-        // Função para atualizar destaques visuais
-        function updateHarmonicFieldHighlights() {
+        // Função para atualizar destaques visuais e labels
+        function updateUIState() {
+            // Atualizar botões da grade
             const btns = document.querySelectorAll('.chord-btn');
             btns.forEach(btn => {
                 const label = btn.dataset.chord;
+                // Cores de Campo
                 btn.classList.remove('highlight-major', 'highlight-minor');
+                if (isMajorFieldActive && majorFieldChords.includes(label)) btn.classList.add('highlight-major');
+                if (isMinorFieldActive && minorFieldChords.includes(label)) btn.classList.add('highlight-minor');
                 
-                if (isMajorFieldActive && majorFieldChords.includes(label)) {
-                    btn.classList.add('highlight-major');
-                }
-                if (isMinorFieldActive && minorFieldChords.includes(label)) {
-                    btn.classList.add('highlight-minor');
-                }
+                // Texto de Grau ou Nota
+                btn.innerText = getDisplayLabel(label);
             });
 
             // Atualizar botões de controle
             const btnMajor = document.getElementById('toggle-major-field');
             const btnMinor = document.getElementById('toggle-minor-field');
+            const btnDegree = document.getElementById('toggle-degree-view');
             
-            if (isMajorFieldActive) {
-                btnMajor.classList.replace('btn-secondary', 'bg-blue-500');
-                btnMajor.classList.add('text-white');
-            } else {
-                btnMajor.classList.replace('bg-blue-500', 'btn-secondary');
-                btnMajor.classList.remove('text-white');
-            }
+            btnMajor.className = isMajorFieldActive 
+                ? 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all bg-blue-500 text-white'
+                : 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-blue-500';
 
-            if (isMinorFieldActive) {
-                btnMinor.classList.replace('btn-secondary', 'bg-emerald-500');
-                btnMinor.classList.add('text-white');
-            } else {
-                btnMinor.classList.replace('bg-emerald-500', 'btn-secondary');
-                btnMinor.classList.remove('text-white');
-            }
+            btnMinor.className = isMinorFieldActive 
+                ? 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all bg-emerald-500 text-white'
+                : 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-emerald-500';
+
+            btnDegree.className = isDegreeViewActive 
+                ? 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all bg-sky-500 text-white'
+                : 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-sky-500';
+
+            renderSequence();
         }
 
-        // Eventos dos botões de campo harmônico
         document.getElementById('toggle-major-field').onclick = () => {
             isMajorFieldActive = !isMajorFieldActive;
-            updateHarmonicFieldHighlights();
+            updateUIState();
         };
         document.getElementById('toggle-minor-field').onclick = () => {
             isMinorFieldActive = !isMinorFieldActive;
-            updateHarmonicFieldHighlights();
+            updateUIState();
+        };
+        document.getElementById('toggle-degree-view').onclick = () => {
+            isDegreeViewActive = !isDegreeViewActive;
+            updateUIState();
         };
 
         async function addOrReplaceChord(label, file) {
@@ -563,7 +588,7 @@
                 div.id = `m-${i}`;
                 div.innerHTML = `
                     <span class="absolute top-0 left-0.5 text-[12px] opacity-40 font-mono font-bold leading-none">${i + 1}</span>
-                    <span class="text-[10px] font-bold tracking-tighter leading-none">${item.label}</span>
+                    <span class="text-[10px] font-bold tracking-tighter leading-none">${getDisplayLabel(item.label)}</span>
                 `;
                 if (isMenu) {
                     const overlay = document.createElement('div');
@@ -571,7 +596,7 @@
                     overlay.innerHTML = `
                         <button class="bg-sky-500 hover:bg-sky-400 text-white">SUB</button>
                         <button class="bg-rose-500 hover:bg-rose-400 text-white">DEL</button>
-                        <button class="bg-slate-600 hover:bg-slate-500 text-white font-mono">X</button>
+                        <button class="bg-slate-600 hover:bg-slate-500 text-white">X</button>
                     `;
                     const [btnReplace, btnDelete, btnCancel] = overlay.querySelectorAll('button');
                     btnReplace.onclick = (e) => {
@@ -645,7 +670,7 @@
                 ctx.fillStyle = '#1e293b';
                 ctx.font = 'bold 13px Inter, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(item.label, x + (mWidth / 2) - 3, y + (mHeight / 2) + 4);
+                ctx.fillText(getDisplayLabel(item.label), x + (mWidth / 2) - 3, y + (mHeight / 2) + 4);
                 ctx.textAlign = 'start';
             });
             exportCanvas.classList.remove('hidden');
@@ -657,7 +682,7 @@
             let text = `// TRABALHO: ${workTitle}\n// AUTOR: ${author}\n`;
             text += "| Compasso | Acorde |\n|-----------|---------|\n";
             sequence.forEach((item, i) => {
-                text += `| ${i + 1} | ${item.label} |\n`;
+                text += `| ${i + 1} | ${getDisplayLabel(item.label)} |\n`;
             });
             return text;
         }
@@ -738,17 +763,13 @@
                 await initAudioContext();
                 const data = JSON.parse(jsonStr);
                 const info = data.projeto || data;
-                
                 if (!info.dados_harmonicos && !info.sequence) throw new Error("Formato Inválido");
-                
                 const ident = info.identificacao || { titulo: info.title || "", nome: info.author || "" };
                 const acordes = info.dados_harmonicos || info.sequence;
-
                 workTitleInput.value = ident.titulo || "";
                 authorNameInput.value = ident.nome || "";
                 sequence = [];
                 statusText.innerText = "Carregando...";
-
                 for (const item of acordes) {
                     const file = item.arquivo || item.file;
                     const buffer = await loadSound(file);
@@ -756,7 +777,6 @@
                         sequence.push({ label: item.label, buffer, file: file });
                     }
                 }
-                
                 renderSequence();
                 statusText.innerText = "Pronto!";
                 return true;
