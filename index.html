@@ -177,7 +177,6 @@
             <div>
                 <h1 class="text-2xl font-bold text-sky-500 tracking-tight leading-none">Tocador de Acordes: Swing 130</h1>
                 <p class="opacity-60 text-[10px] mt-1 uppercase tracking-wider">Criação Musical 1 — DAC/UFSCar</p>
-                <!-- Novo: Campo de Título do Trabalho -->
                 <input type="text" id="work-title-input" placeholder="Digite o título do trabalho aqui..." class="mt-2 w-full max-w-md px-3 py-1 text-sm rounded-lg border focus:ring-1 focus:ring-sky-500 outline-none transition-all">
             </div>
             
@@ -249,7 +248,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v6.0 | Projeto & Backup</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v6.1 | High-Precision Export</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -259,31 +258,32 @@
     <div id="export-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="card w-full max-w-2xl p-6 rounded-2xl border shadow-2xl relative">
             <h2 class="text-xl font-bold mb-4 text-sky-500 uppercase tracking-tighter">Exportar / Backup</h2>
+            <!-- Reordenado: Dados do Projeto primeiro -->
             <div class="flex flex-wrap gap-2 mb-4 overflow-x-auto pb-2">
-                <button id="exp-img-btn" class="flex-1 min-w-[100px] py-2 bg-emerald-600 text-white rounded-lg font-bold text-[9px] uppercase">COMO IMAGEM</button>
-                <button id="exp-mus-btn" class="flex-1 min-w-[100px] py-2 bg-indigo-600 text-white rounded-lg font-bold text-[9px] uppercase">COMO XML</button>
-                <button id="exp-tab-btn" class="flex-1 min-w-[100px] py-2 bg-sky-500 text-white rounded-lg font-bold text-[9px] uppercase">COMO TABELA</button>
-                <button id="exp-biab-btn" class="flex-1 min-w-[100px] py-2 bg-slate-700 text-white rounded-lg font-bold text-[9px] uppercase">COMO BIAB</button>
-                <!-- Novo: Botão de Dados do Projeto -->
                 <button id="exp-data-btn" class="flex-1 min-w-[100px] py-2 bg-orange-600 text-white rounded-lg font-bold text-[9px] uppercase">DADOS DO PROJETO</button>
+                <button id="exp-img-btn" class="flex-1 min-w-[100px] py-2 bg-emerald-600 text-white rounded-lg font-bold text-[9px] uppercase">COMO IMAGEM</button>
+                <button id="exp-tab-btn" class="flex-1 min-w-[100px] py-2 bg-sky-500 text-white rounded-lg font-bold text-[9px] uppercase">COMO TABELA</button>
+                <button id="exp-mus-btn" class="flex-1 min-w-[100px] py-2 bg-indigo-600 text-white rounded-lg font-bold text-[9px] uppercase">COMO XML</button>
+                <button id="exp-biab-btn" class="flex-1 min-w-[100px] py-2 bg-slate-700 text-white rounded-lg font-bold text-[9px] uppercase">COMO BIAB</button>
             </div>
             <div id="export-preview-container" class="mb-4">
-                <div id="data-controls" class="hidden flex gap-2 mb-2">
-                    <button id="import-btn" class="flex-1 py-1.5 bg-orange-500 text-white rounded-lg font-bold text-[10px] uppercase">IMPORTAR DADOS ABAIXO</button>
+                <div id="data-controls" class="hidden flex flex-col gap-2 mb-2">
+                    <button id="import-btn" class="w-full py-2 bg-orange-500 text-white rounded-lg font-bold text-[10px] uppercase">Importar dados do projeto do txt</button>
+                    <p id="data-hint" class="text-[10px] opacity-50 italic text-center">Cole o conteúdo do backup abaixo para importar ou salve seu projeto no botão verde.</p>
                 </div>
-                <textarea id="export-text" class="w-full h-48 p-4 bg-slate-900/50 dark:bg-slate-900 border border-slate-700 rounded-xl font-mono text-xs mb-4" placeholder="Cole os dados aqui para importar..."></textarea>
+                <textarea id="export-text" class="w-full h-48 p-4 bg-slate-900/50 dark:bg-slate-900 border border-slate-700 rounded-xl font-mono text-xs mb-4" placeholder="Área de texto para importar dados..."></textarea>
                 <canvas id="export-canvas" class="hidden w-full border border-slate-700 rounded-xl bg-white"></canvas>
             </div>
             <div class="flex gap-2">
                 <button id="copy-btn" class="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-bold text-xs uppercase">Copiar Texto</button>
                 <button id="download-img-btn" class="hidden flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold text-xs uppercase">Download PNG</button>
-                <button id="download-mus-btn" class="hidden flex-1 py-3 bg-indigo-500 text-white rounded-xl font-bold text-xs uppercase">Baixar .XML</button>
+                <button id="download-mus-btn" class="hidden flex-1 py-3 bg-indigo-500 text-white rounded-xl font-bold text-xs uppercase">Salvar como xml</button>
+                <button id="download-data-btn" class="hidden flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold text-xs uppercase">Salvar como txt</button>
                 <button id="close-modal" class="px-6 py-3 btn-secondary rounded-xl font-bold text-xs uppercase">Fechar</button>
             </div>
         </div>
     </div>
 
-    <!-- Script de lógica -->
     <script>
         // --- AUDIO CORE ---
         let audioCtx = null;
@@ -335,7 +335,7 @@
                 audioBuffers.set(url, buffer);
                 return buffer;
             } catch (e) {
-                console.error("Erro no som:", url);
+                console.error("Erro som:", url);
                 return null;
             }
         }
@@ -409,14 +409,12 @@
                     const parts = note.display.split('/');
                     const wrapper = document.createElement('div');
                     wrapper.className = 'flex gap-0.5 h-[22px]';
-                    
                     parts.forEach(p => {
                         const btn = document.createElement('button');
                         btn.className = 'chord-btn rounded font-semibold border-b border-slate-900 dark:border-slate-950 shadow-sm transition-all hover:bg-sky-500 hover:text-white bg-slate-700 text-white flex-1 text-[7px] p-0';
                         const fullLabel = p + type.label;
                         btn.innerText = fullLabel;
                         const fileName = `swing130_${note.file}${type.suffix}.mp3`;
-                        
                         btn.onclick = async () => {
                             await initAudioContext();
                             addOrReplaceChord(fullLabel, fileName);
@@ -430,7 +428,6 @@
                     const fullLabel = note.display + type.label;
                     btn.innerText = fullLabel;
                     const fileName = `swing130_${note.file}${type.suffix}.mp3`;
-                    
                     btn.onclick = async () => {
                         await initAudioContext();
                         addOrReplaceChord(fullLabel, fileName);
@@ -469,15 +466,12 @@
                 const div = document.createElement('div');
                 const isEditing = (editingIndex === i);
                 const isMenu = (menuActiveIndex === i);
-
                 div.className = `sequence-item card border-r-2 border-r-sky-500 rounded shadow-sm group cursor-pointer transition-all border ${isEditing ? 'editing-highlight' : ''}`;
                 div.id = `m-${i}`;
-                
                 div.innerHTML = `
                     <span class="absolute top-0 left-0.5 text-[12px] opacity-40 font-mono font-bold leading-none">${i + 1}</span>
                     <span class="text-[10px] font-bold tracking-tighter leading-none">${item.label}</span>
                 `;
-
                 if (isMenu) {
                     const overlay = document.createElement('div');
                     overlay.className = 'options-overlay';
@@ -486,9 +480,7 @@
                         <button class="bg-rose-500 hover:bg-rose-400 text-white">DEL</button>
                         <button class="bg-slate-600 hover:bg-slate-500 text-white font-mono">X</button>
                     `;
-                    
                     const [btnReplace, btnDelete, btnCancel] = overlay.querySelectorAll('button');
-                    
                     btnReplace.onclick = (e) => {
                         e.stopPropagation();
                         editingIndex = i;
@@ -496,23 +488,19 @@
                         renderSequence();
                         statusText.innerText = "SUB";
                     };
-                    
                     btnDelete.onclick = (e) => {
                         e.stopPropagation();
                         sequence.splice(i, 1);
                         menuActiveIndex = null;
                         renderSequence();
                     };
-
                     btnCancel.onclick = (e) => {
                         e.stopPropagation();
                         menuActiveIndex = null;
                         renderSequence();
                     };
-
                     div.appendChild(overlay);
                 }
-
                 div.onclick = () => {
                     if(!isPlaying) {
                         if (editingIndex === i) {
@@ -525,7 +513,6 @@
                         }
                     }
                 };
-
                 sequenceList.appendChild(div);
             });
         }
@@ -538,44 +525,34 @@
             const mHeight = 40;
             const padding = 20;
             const workTitle = workTitleInput.value || "Trabalho Sem Título";
-            
             exportCanvas.width = (cols * mWidth) + (padding * 2);
             exportCanvas.height = (rows * mHeight) + (padding * 2) + 60;
-            
             const ctx = exportCanvas.getContext('2d');
-            
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-            
             ctx.fillStyle = '#0ea5e9';
             ctx.font = 'bold 24px Inter, sans-serif';
             ctx.fillText(workTitle, padding, padding + 25);
             ctx.font = '12px Inter, sans-serif';
             ctx.fillStyle = '#64748b';
             ctx.fillText('Criação Musical 1 — DAC/UFSCar — Prof. Glauber Santiago', padding, padding + 45);
-
             sequence.forEach((item, i) => {
                 const x = padding + (i % cols) * mWidth;
                 const y = padding + 70 + Math.floor(i / cols) * mHeight;
-                
                 ctx.strokeStyle = '#e2e8f0';
                 ctx.lineWidth = 1;
                 ctx.strokeRect(x, y, mWidth - 4, mHeight - 4);
-                
                 ctx.fillStyle = '#0ea5e9';
                 ctx.fillRect(x + mWidth - 7, y, 3, mHeight - 4);
-                
                 ctx.fillStyle = '#94a3b8';
-                ctx.font = 'bold 16px monospace';
+                ctx.font = 'bold 12px monospace';
                 ctx.fillText(i + 1, x + 3, y + 15);
-                
                 ctx.fillStyle = '#1e293b';
                 ctx.font = 'bold 13px Inter, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.fillText(item.label, x + (mWidth / 2) - 3, y + (mHeight / 2) + 4);
                 ctx.textAlign = 'start';
             });
-
             exportCanvas.classList.remove('hidden');
         }
 
@@ -596,11 +573,9 @@
                 const cleanLabel = item.label.replace(/\(|\)/g, "");
                 chordsText += cleanLabel + "| ";
             });
-            
             return `// TRABALHO: ${workTitle}\n[Song]\n[Chords]\n${chordsText.trim()}\n[ChordsEnd]\n[SongEnd]`;
         }
 
-        // --- EXPORTAR XML (MusicXML) em 4/4 ---
         function getXmlExport() {
             const workTitle = workTitleInput.value || "Swing Harmony Project";
             let xml = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -610,12 +585,10 @@
   <identification><creator type="composer">Glauber Santiago</creator></identification>
   <part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
   <part id="P1">`;
-
             sequence.forEach((item, i) => {
                 const match = item.label.match(/^([A-Ga-g][#b]?)(.*)$/);
                 let root = match ? match[1] : "C";
                 let type = match ? match[2] : "";
-
                 let kind = "major";
                 if (type === "maj7") kind = "major-seventh";
                 else if (type === "9") kind = "dominant-ninth";
@@ -623,10 +596,8 @@
                 else if (type === "m7") kind = "minor-seventh";
                 else if (type === "m7b5" || type === "m7(b5)") kind = "half-diminished";
                 else if (type === "dim7") kind = "diminished-seventh";
-
                 let step = root.charAt(0).toUpperCase();
                 let alter = root.includes("#") ? "1" : (root.includes("b") ? "-1" : "0");
-
                 xml += `
     <measure number="${i + 1}">
       ${i === 0 ? `
@@ -653,14 +624,12 @@
       </note>
     </measure>`;
             });
-
             xml += `
   </part>
 </score-partwise>`;
             return xml;
         }
 
-        // --- IMPORTAR / EXPORTAR DADOS (JSON) ---
         function getProjectData() {
             const data = {
                 title: workTitleInput.value,
@@ -672,25 +641,22 @@
         async function importProjectData(jsonStr) {
             try {
                 const data = JSON.parse(jsonStr);
-                if (!data.sequence) throw new Error("Formato inválido");
-                
+                if (!data.sequence) throw new Error("Invalido");
                 workTitleInput.value = data.title || "";
                 sequence = [];
-                statusText.innerText = "Importando...";
-                
+                statusText.innerText = "...";
                 for (const item of data.sequence) {
                     const buffer = await loadSound(item.file);
                     if (buffer) {
                         sequence.push({ label: item.label, buffer, file: item.file });
                     }
                 }
-                
                 renderSequence();
                 statusText.innerText = "Importado!";
                 setTimeout(() => statusText.innerText = "Pronto", 1500);
                 return true;
             } catch (e) {
-                statusText.innerText = "Erro nos dados";
+                statusText.innerText = "Erro!";
                 return false;
             }
         }
@@ -702,6 +668,7 @@
             document.getElementById('copy-btn').classList.add('hidden');
             document.getElementById('download-img-btn').classList.add('hidden');
             document.getElementById('download-mus-btn').classList.add('hidden');
+            document.getElementById('download-data-btn').classList.add('hidden');
             exportTextArea.readOnly = true;
 
             [ 'exp-img-btn', 'exp-tab-btn', 'exp-biab-btn', 'exp-mus-btn', 'exp-data-btn' ].forEach(id => {
@@ -714,16 +681,16 @@
                 document.getElementById('download-img-btn').classList.remove('hidden');
                 document.getElementById('exp-img-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
             } else if (type === 'mus') {
-                exportTextArea.classList.remove('hidden');
-                exportTextArea.value = getXmlExport();
+                // Não mostra os dados na tela, apenas botão para baixar
                 document.getElementById('download-mus-btn').classList.remove('hidden');
                 document.getElementById('exp-mus-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
             } else if (type === 'data') {
+                // Modo Backup: Mostra textarea para importar, mas oculta o conteúdo automático para salvar
                 exportTextArea.classList.remove('hidden');
                 exportTextArea.readOnly = false;
-                exportTextArea.value = getProjectData();
+                exportTextArea.value = ""; // Limpa para o usuário colar, se quiser importar
                 document.getElementById('data-controls').classList.remove('hidden');
-                document.getElementById('copy-btn').classList.remove('hidden');
+                document.getElementById('download-data-btn').classList.remove('hidden');
                 document.getElementById('exp-data-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
             } else {
                 exportTextArea.classList.remove('hidden');
@@ -740,7 +707,7 @@
 
         document.getElementById('export-btn').onclick = () => {
             exportModal.classList.remove('hidden');
-            showExportView(sequence.length > 0 ? 'img' : 'data'); 
+            showExportView('data'); // Padrão agora é Dados do Projeto
         };
 
         document.getElementById('exp-img-btn').onclick = () => showExportView('img');
@@ -750,12 +717,14 @@
         document.getElementById('exp-data-btn').onclick = () => showExportView('data');
 
         document.getElementById('import-btn').onclick = () => {
-            importProjectData(exportTextArea.value);
+            if (importProjectData(exportTextArea.value)) {
+                exportModal.classList.add('hidden');
+            }
         };
 
         document.getElementById('download-img-btn').onclick = () => {
             const link = document.createElement('a');
-            link.download = `sequencia-${Date.now()}.png`;
+            link.download = `partitura-${Date.now()}.png`;
             link.href = exportCanvas.toDataURL('image/png');
             link.click();
         };
@@ -763,7 +732,15 @@
         document.getElementById('download-mus-btn').onclick = () => {
             const blob = new Blob([getXmlExport()], { type: 'text/xml' });
             const link = document.createElement('a');
-            link.download = 'harmonia.musicxml';
+            link.download = 'projeto-harmonia.musicxml';
+            link.href = URL.createObjectURL(blob);
+            link.click();
+        };
+
+        document.getElementById('download-data-btn').onclick = () => {
+            const blob = new Blob([getProjectData()], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.download = 'backup-projeto.txt';
             link.href = URL.createObjectURL(blob);
             link.click();
         };
@@ -773,7 +750,7 @@
             exportTextArea.select();
             document.execCommand('copy');
             statusText.innerText = "COPIADO";
-            setTimeout(() => statusText.innerText = "PRONTO", 1500);
+            setTimeout(() => statusText.innerText = "Pronto", 1500);
         };
 
         // --- PLAYBACK ---
@@ -784,33 +761,26 @@
             menuActiveIndex = null;
             renderSequence();
             toggleUI(true);
-
             const start = audioCtx.currentTime + 0.15;
             sequence.forEach((item, i) => {
                 const time = start + (i * MEASURE_DURATION);
                 const stopTime = time + MEASURE_DURATION + 0.2; 
-
                 const source = audioCtx.createBufferSource();
                 const gain = audioCtx.createGain();
                 source.buffer = item.buffer;
-
                 gain.gain.setValueAtTime(0, time);
                 gain.gain.linearRampToValueAtTime(1, time + 0.005);
                 gain.gain.setValueAtTime(1, time + MEASURE_DURATION);
                 gain.gain.linearRampToValueAtTime(0, stopTime);
-
                 source.connect(gain);
                 gain.connect(masterGain);
                 if (reverbNode) gain.connect(reverbNode);
-
                 source.start(time);
                 source.stop(stopTime);
                 activeNodes.push({source, gain});
-
                 const timer = setTimeout(() => highlight(i), (time - audioCtx.currentTime) * 1000);
                 visualTimers.push(timer);
             });
-
             const total = sequence.length * MEASURE_DURATION;
             visualTimers.push(setTimeout(stop, (start + total - audioCtx.currentTime) * 1000));
         }
@@ -849,7 +819,6 @@
         playBtn.onclick = play;
         stopBtn.onclick = stop;
         document.getElementById('clear-btn').onclick = () => { if(!isPlaying) { sequence=[]; editingIndex=null; menuActiveIndex=null; renderSequence(); }};
-
     </script>
 </body>
 </html>
