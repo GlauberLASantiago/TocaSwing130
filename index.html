@@ -106,6 +106,26 @@
             background-color: rgba(245, 158, 11, 0.05) !important;
         }
 
+        /* Estilos de Destaque para Campos Harmônicos */
+        .chord-btn.highlight-major {
+            background-color: #3b82f6 !important; /* Azul intenso */
+            color: white !important;
+            border-color: #1d4ed8 !important;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        .chord-btn.highlight-minor {
+            background-color: #10b981 !important; /* Verde intenso */
+            color: white !important;
+            border-color: #047857 !important;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        /* Caso ambos estejam ativos para o mesmo acorde */
+        .chord-btn.highlight-major.highlight-minor {
+            background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%) !important;
+        }
+
         input[type=range] {
             accent-color: #0ea5e9;
         }
@@ -183,7 +203,6 @@
             </div>
             
             <div class="flex flex-wrap items-center gap-2 card p-2 rounded-xl border">
-                <!-- Controle de Reverb -->
                 <div class="flex items-center gap-2 px-2 border-r border-slate-700/30 pr-3">
                     <label class="text-[8px] uppercase opacity-50 font-bold">Reverb</label>
                     <input type="range" id="reverb-slider" min="0" max="100" value="25" class="w-20 h-1 rounded-lg appearance-none cursor-pointer">
@@ -236,6 +255,16 @@
                     <div id="grid-container" class="contents"></div>
                 </div>
             </section>
+
+            <!-- Seção de Indicadores de Campo Harmônico -->
+            <section class="flex flex-wrap gap-4 mt-4 mb-2 justify-center">
+                <button id="toggle-major-field" class="px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-blue-500">
+                    Campo harmônico diatônico maior de dó
+                </button>
+                <button id="toggle-minor-field" class="px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-emerald-500">
+                    Campo harmônico menor de dó
+                </button>
+            </section>
         </main>
 
         <footer class="mt-4 pt-3 border-t border-slate-700/30 flex flex-col md:flex-row justify-between items-end gap-3 text-left">
@@ -247,7 +276,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v6.6 | Fix Import System</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v6.7 | Field Label Correction</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -369,12 +398,16 @@
             { suffix: 'dim7', label: 'dim7' }
         ];
 
+        // Definição dos Grupos de Campo Harmônico (Ajustados)
+        const majorFieldChords = ['Cmaj7', 'Dm7', 'Em7', 'Fmaj7', 'G9', 'Am7', 'Bm7(b5)'];
+        const minorFieldChords = ['Cm7', 'Dbmaj7', 'Dm7(b5)', 'Ebmaj7', 'Fm7', 'G7(b9)', 'Abmaj7', 'Bb9', 'Bbmaj7', 'Bdim7'];
+
         let sequence = [];
         let isPlaying = false;
-        let activeNodes = [];
-        let visualTimers = [];
         let editingIndex = null; 
         let menuActiveIndex = null; 
+        let isMajorFieldActive = false;
+        let isMinorFieldActive = false;
 
         const gridContainer = document.getElementById('grid-container');
         const sequenceList = document.getElementById('sequence-list');
@@ -408,6 +441,7 @@
                 : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
         });
 
+        // Gerar Grade
         noteData.forEach(note => {
             const label = document.createElement('div');
             label.className = 'flex items-center justify-center font-bold text-sky-500 card rounded note-label border';
@@ -421,10 +455,12 @@
                     wrapper.className = 'flex gap-0.5 h-[22px]';
                     parts.forEach(p => {
                         const btn = document.createElement('button');
-                        btn.className = 'chord-btn rounded font-semibold border-b border-slate-900 dark:border-slate-950 shadow-sm transition-all hover:bg-sky-500 hover:text-white bg-slate-700 text-white flex-1 text-[7px] p-0';
                         const fullLabel = p + type.label;
+                        btn.className = 'chord-btn rounded font-semibold border-b border-slate-900 dark:border-slate-950 shadow-sm transition-all hover:bg-sky-500 hover:text-white bg-slate-700 text-white flex-1 text-[7px] p-0';
+                        btn.dataset.chord = fullLabel;
                         btn.innerText = fullLabel;
                         const fileName = `swing130_${note.file}${type.suffix}.mp3`;
+                        
                         btn.onclick = async () => {
                             await initAudioContext();
                             addOrReplaceChord(fullLabel, fileName);
@@ -434,10 +470,12 @@
                     gridContainer.appendChild(wrapper);
                 } else {
                     const btn = document.createElement('button');
-                    btn.className = 'chord-btn rounded font-semibold border-b border-slate-900 dark:border-slate-950 shadow-sm transition-all hover:bg-sky-500 hover:text-white bg-slate-700 text-white';
                     const fullLabel = note.display + type.label;
+                    btn.className = 'chord-btn rounded font-semibold border-b border-slate-900 dark:border-slate-950 shadow-sm transition-all hover:bg-sky-500 hover:text-white bg-slate-700 text-white';
+                    btn.dataset.chord = fullLabel;
                     btn.innerText = fullLabel;
                     const fileName = `swing130_${note.file}${type.suffix}.mp3`;
+                    
                     btn.onclick = async () => {
                         await initAudioContext();
                         addOrReplaceChord(fullLabel, fileName);
@@ -446,6 +484,52 @@
                 }
             });
         });
+
+        // Função para atualizar destaques visuais
+        function updateHarmonicFieldHighlights() {
+            const btns = document.querySelectorAll('.chord-btn');
+            btns.forEach(btn => {
+                const label = btn.dataset.chord;
+                btn.classList.remove('highlight-major', 'highlight-minor');
+                
+                if (isMajorFieldActive && majorFieldChords.includes(label)) {
+                    btn.classList.add('highlight-major');
+                }
+                if (isMinorFieldActive && minorFieldChords.includes(label)) {
+                    btn.classList.add('highlight-minor');
+                }
+            });
+
+            // Atualizar botões de controle
+            const btnMajor = document.getElementById('toggle-major-field');
+            const btnMinor = document.getElementById('toggle-minor-field');
+            
+            if (isMajorFieldActive) {
+                btnMajor.classList.replace('btn-secondary', 'bg-blue-500');
+                btnMajor.classList.add('text-white');
+            } else {
+                btnMajor.classList.replace('bg-blue-500', 'btn-secondary');
+                btnMajor.classList.remove('text-white');
+            }
+
+            if (isMinorFieldActive) {
+                btnMinor.classList.replace('btn-secondary', 'bg-emerald-500');
+                btnMinor.classList.add('text-white');
+            } else {
+                btnMinor.classList.replace('bg-emerald-500', 'btn-secondary');
+                btnMinor.classList.remove('text-white');
+            }
+        }
+
+        // Eventos dos botões de campo harmônico
+        document.getElementById('toggle-major-field').onclick = () => {
+            isMajorFieldActive = !isMajorFieldActive;
+            updateHarmonicFieldHighlights();
+        };
+        document.getElementById('toggle-minor-field').onclick = () => {
+            isMinorFieldActive = !isMinorFieldActive;
+            updateHarmonicFieldHighlights();
+        };
 
         async function addOrReplaceChord(label, file) {
             if (isPlaying) return;
@@ -608,7 +692,7 @@
                 else if (type === "9") kind = "dominant-ninth";
                 else if (type.includes("7") && type.includes("b9")) kind = "dominant";
                 else if (type === "m7") kind = "minor-seventh";
-                else if (type === "m7b5" || type === "m7(b5)") kind = "half-dimidished";
+                else if (type === "m7b5" || type === "m7(b5)") kind = "half-diminished";
                 else if (type === "dim7") kind = "diminished-seventh";
                 let step = root.charAt(0).toUpperCase();
                 let alter = root.includes("#") ? "1" : (root.includes("b") ? "-1" : "0");
@@ -632,6 +716,7 @@
             return xml;
         }
 
+        // --- GESTÃO DO PROJETO (BACKUP) ---
         function getProjectData() {
             const data = {
                 projeto: {
@@ -650,13 +735,11 @@
 
         async function importProjectData(jsonStr) {
             try {
-                // Inicia o contexto de áudio antes de carregar ficheiros
                 await initAudioContext();
-                
                 const data = JSON.parse(jsonStr);
                 const info = data.projeto || data;
                 
-                if (!info.dados_harmonicos && !info.sequence) throw new Error("Ficheiro Inválido");
+                if (!info.dados_harmonicos && !info.sequence) throw new Error("Formato Inválido");
                 
                 const ident = info.identificacao || { titulo: info.title || "", nome: info.author || "" };
                 const acordes = info.dados_harmonicos || info.sequence;
@@ -664,7 +747,7 @@
                 workTitleInput.value = ident.titulo || "";
                 authorNameInput.value = ident.nome || "";
                 sequence = [];
-                statusText.innerText = "Lendo...";
+                statusText.innerText = "Carregando...";
 
                 for (const item of acordes) {
                     const file = item.arquivo || item.file;
@@ -780,6 +863,7 @@
             setTimeout(() => statusText.innerText = oldText, 1500);
         };
 
+        // --- PLAYBACK ---
         function play() {
             if (!sequence.length || isPlaying) return;
             isPlaying = true;
