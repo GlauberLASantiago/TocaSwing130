@@ -542,7 +542,9 @@
         function getBIABExport() {
             let chordsText = "|:a) ";
             sequence.forEach((item, i) => {
-                chordsText += item.label + "| ";
+                // Remove parênteses para compatibilidade com Band in a Box
+                const cleanLabel = item.label.replace(/\(|\)/g, "");
+                chordsText += cleanLabel + "| ";
             });
             
             return `[Song]\n[Chords]\n${chordsText.trim()}\n[ChordsEnd]\n[SongEnd]`;
@@ -580,7 +582,7 @@
         document.getElementById('export-btn').onclick = () => {
             if (sequence.length === 0) return;
             exportModal.classList.remove('hidden');
-            showExportView('img'); // Default to image as requested
+            showExportView('img'); 
         };
 
         document.getElementById('exp-img-btn').onclick = () => showExportView('img');
