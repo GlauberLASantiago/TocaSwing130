@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swing Studio 130 - UFSCar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Dark Theme */
+        .dark {
+            background-color: #0f172a;
+            color: #f1f5f9;
+        }
+        .dark .card {
+            background-color: rgba(30, 41, 59, 0.5);
+            border-color: #334155;
+        }
+        .dark .btn-secondary {
+            background-color: #334155;
+            color: #cbd5e1;
+        }
+
+        /* Light Theme */
+        .light {
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        .light .card {
+            background-color: #ffffff;
+            border-color: #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        .light .btn-secondary {
+            background-color: #e2e8f0;
+            color: #475569;
+        }
+        .light .chord-btn {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            border-color: #cbd5e1;
+        }
+
+        .chord-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(6, 1fr);
+            gap: 4px;
+        }
+
+        .measure-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .sequence-item {
+            aspect-ratio: 2 / 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        input[type=range] {
+            accent-color: #38bdf8;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        .column-header {
+            font-size: 10px;
+            line-height: 1.1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 4px;
+            min-height: 40px;
+        }
+    </style>
+</head>
+<body class="dark p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-6 flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-slate-700/50 pb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-sky-500">Swing Studio 130</h1>
+                <p class="opacity-70 text-sm italic">Criação Musical 1 - DAC/UFSCar</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-4 card p-3 rounded-xl border">
+                <!-- Controle de BPM -->
+                <div class="flex flex-col px-2 border-r border-slate-700/50 pr-4">
+                    <label class="text-[10px] uppercase opacity-50 font-bold mb-1">Andamento (BPM)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="bpm-slider" min="60" max="180" value="130" class="w-24 h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer">
+                        <span id="bpm-val" class="text-sm font-mono text-sky-400 w-8 text-center">130</span>
+                    </div>
+                </div>
+
+                <!-- Controle de Reverb -->
+                <div class="flex flex-col px-2 border-r border-slate-700/50 pr-4">
+                    <label class="text-[10px] uppercase opacity-50 font-bold mb-1">Reverberação</label>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="reverb-slider" min="0" max="100" value="25" class="w-24 h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer">
+                        <span id="reverb-val" class="text-sm font-mono text-sky-400 w-8 text-center">25</span>
+                    </div>
+                </div>
+
+                <!-- Theme Toggle -->
+                <button id="theme-toggle" class="p-2 rounded-lg btn-secondary hover:opacity-80 transition-all" title="Alternar Tema">
+                    <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                </button>
+
+                <div class="px-2 border-r border-slate-700/50 pr-4">
+                    <span class="block text-[10px] uppercase opacity-50 font-bold leading-none">Status</span>
+                    <span id="status-text" class="text-sm text-emerald-500 font-medium tracking-tight">Pronto</span>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button id="play-btn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                        </svg>
+                        Tocar
+                    </button>
+                    <button id="stop-btn" class="hidden bg-rose-500 hover:bg-rose-600 text-white px-6 py-2 rounded-lg font-bold transition-all">
+                        Parar
+                    </button>
+                    <button id="clear-btn" class="btn-secondary px-4 py-2 rounded-lg font-bold border transition-colors">
+                        Limpar
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex flex-col gap-8">
+            <!-- Partitura / Sequência -->
+            <section class="w-full">
+                <div id="sequence-list" class="measure-grid min-h-[140px] card border-2 rounded-xl p-4 overflow-y-auto max-h-[350px]">
+                    <p id="empty-msg" class="col-span-4 opacity-50 text-sm text-center py-10 italic">Adicione acordes para montar a estrutura (4 por linha)...</p>
+                </div>
+            </section>
+
+            <!-- Painel de Acordes -->
+            <section class="card p-5 rounded-2xl border overflow-x-auto">
+                <div class="chord-grid min-w-[900px]">
+                    <div class="p-2"></div>
+                    <div class="column-header font-bold opacity-60 uppercase text-sky-500">maior com sétima maior</div>
+                    <div class="column-header font-bold opacity-60 uppercase text-sky-500">maior com sétima e nona</div>
+                    <div class="column-header font-bold opacity-60 uppercase text-sky-500">maior com sétima e nona menor</div>
+                    <div class="column-header font-bold opacity-60 uppercase text-sky-500">menor com sétima</div>
+                    <div class="column-header font-bold opacity-60 uppercase text-sky-500">meio diminuto</div>
+                    <div class="column-header font-bold opacity-60 uppercase text-sky-500">tétrade diminuta</div>
+                    
+                    <div id="grid-container" class="contents"></div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="mt-12 pt-6 border-t border-slate-700/50 flex flex-col md:flex-row justify-between items-start gap-6 text-left">
+            <div class="text-[11px] opacity-70 max-w-2xl">
+                <p class="font-bold text-sky-500 mb-1">CRÉDITOS:</p>
+                <p class="leading-relaxed">Elaborado pelo professor <strong>Glauber Santiago</strong> para a disciplina <strong>Criação Musical 1</strong> - DAC/UFSCar - 2026.</p>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+                <p class="text-[11px] opacity-40 font-mono uppercase">Swing Engine v3.1 | 2/4 Time</p>
+                <p class="text-[10px] opacity-50">glauberlasantiago.github.io/TocaSwing130/</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // --- AUDIO CORE ---
+        let audioCtx = null;
+        const audioBuffers = new Map();
+        let masterGain = null;
+        let reverbNode = null;
+        let reverbGain = null;
+
+        async function initAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioCtx.createGain();
+                masterGain.connect(audioCtx.destination);
+
+                reverbNode = audioCtx.createConvolver();
+                reverbGain = audioCtx.createGain();
+                reverbNode.buffer = createImpulse(1.5, 2.0); 
+                
+                reverbNode.connect(reverbGain);
+                reverbGain.connect(masterGain);
+                
+                updateReverbLevel(document.getElementById('reverb-slider').value);
+            }
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+        }
+
+        function createImpulse(duration, decay) {
+            const length = audioCtx.sampleRate * duration;
+            const buffer = audioCtx.createBuffer(2, length, audioCtx.sampleRate);
+            for (let channel = 0; channel < 2; channel++) {
+                const data = buffer.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+                }
+            }
+            return buffer;
+        }
+
+        function updateReverbLevel(val) {
+            if (reverbGain) reverbGain.gain.setTargetAtTime(val / 150, audioCtx.currentTime, 0.05);
+        }
+
+        async function loadSound(url) {
+            if (audioBuffers.has(url)) return audioBuffers.get(url);
+            try {
+                const response = await fetch(url);
+                const ab = await response.arrayBuffer();
+                const buffer = await audioCtx.decodeAudioData(ab);
+                audioBuffers.set(url, buffer);
+                return buffer;
+            } catch (e) {
+                console.error("Load Error:", url);
+                return null;
+            }
+        }
+
+        // --- MUSICAL SETTINGS ---
+        let BPM = 130;
+        let MEASURE_DURATION = (60 / BPM) * 2;
+
+        const noteData = [
+            { display: 'B', file: 'b' },
+            { display: 'A#/Bb', file: 'as' },
+            { display: 'A', file: 'a' },
+            { display: 'G#/Ab', file: 'gs' },
+            { display: 'G', file: 'g' },
+            { display: 'F#/Gb', file: 'fs' },
+            { display: 'F', file: 'f' },
+            { display: 'E', file: 'e' },
+            { display: 'D#/Eb', file: 'ds' },
+            { display: 'D', file: 'd' },
+            { display: 'C#/Db', file: 'cs' },
+            { display: 'C', file: 'c' }
+        ];
+
+        const types = [
+            { suffix: 'maj7', label: 'maj7' },
+            { suffix: '9', label: '9' },
+            { suffix: '7b9', label: '7(b9)' },
+            { suffix: 'm7', label: 'm7' },
+            { suffix: 'm7b5', label: 'm7(b5)' },
+            { suffix: 'dim7', label: 'dim7' }
+        ];
+
+        let sequence = [];
+        let isPlaying = false;
+        let activeNodes = [];
+        let visualTimers = [];
+
+        const gridContainer = document.getElementById('grid-container');
+        const sequenceList = document.getElementById('sequence-list');
+        const playBtn = document.getElementById('play-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const bpmSlider = document.getElementById('bpm-slider');
+        const reverbSlider = document.getElementById('reverb-slider');
+        const statusText = document.getElementById('status-text');
+
+        // Controles de UI
+        bpmSlider.addEventListener('input', (e) => {
+            BPM = parseInt(e.target.value);
+            MEASURE_DURATION = (60 / BPM) * 2;
+            document.getElementById('bpm-val').innerText = BPM;
+        });
+
+        reverbSlider.addEventListener('input', (e) => {
+            document.getElementById('reverb-val').innerText = e.target.value;
+            updateReverbLevel(e.target.value);
+        });
+
+        // Theme Switcher
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            document.body.classList.toggle('light');
+            const isDark = document.body.classList.contains('dark');
+            document.getElementById('theme-icon').innerHTML = isDark 
+                ? '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'
+                : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+        });
+
+        // Montar Grid
+        noteData.forEach(note => {
+            const label = document.createElement('div');
+            label.className = 'flex items-center justify-center font-bold text-sky-500 card rounded-lg text-sm border';
+            label.innerText = note.display;
+            gridContainer.appendChild(label);
+
+            types.forEach(type => {
+                const btn = document.createElement('button');
+                btn.className = 'chord-btn p-3 rounded-lg text-[13px] font-semibold border-b-2 border-slate-900 active:translate-y-0.5 shadow-sm transition-all bg-slate-700 text-white hover:bg-sky-500';
+                
+                // Exibe o nome completo: Nota + Sufixo (ex: Bmaj7, A#/Bbmaj7)
+                const fullLabel = note.display + type.label;
+                btn.innerText = fullLabel;
+                
+                const file = `swing130_${note.file}${type.suffix}.mp3`;
+                btn.onclick = async () => {
+                    await initAudioContext();
+                    addChord(fullLabel, file);
+                };
+                gridContainer.appendChild(btn);
+            });
+        });
+
+        async function addChord(label, file) {
+            if (isPlaying) return;
+            statusText.innerText = "Carregando...";
+            const buffer = await loadSound(file);
+            if (buffer) {
+                sequence.push({ label, buffer });
+                statusText.innerText = "Pronto";
+                renderSequence();
+            } else {
+                statusText.innerText = "Falta: " + file;
+            }
+        }
+
+        function renderSequence() {
+            sequenceList.innerHTML = '';
+            if (sequence.length === 0) {
+                sequenceList.innerHTML = '<p class="col-span-4 opacity-50 text-sm text-center py-10 italic">Adicione acordes para montar a estrutura (4 por linha)...</p>';
+                return;
+            }
+            sequence.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.className = 'sequence-item card border-r-4 border-r-sky-500 rounded-md shadow-md group cursor-pointer hover:bg-sky-500/10 transition-all border';
+                div.id = `m-${i}`;
+                div.innerHTML = `
+                    <span class="absolute top-1 left-2 text-[10px] opacity-40 font-mono">${i + 1}</span>
+                    <span class="text-lg font-bold tracking-tight">${item.label}</span>
+                `;
+                div.onclick = () => { if(!isPlaying) { sequence.splice(i, 1); renderSequence(); } };
+                sequenceList.appendChild(div);
+            });
+        }
+
+        function play() {
+            if (!sequence.length || isPlaying) return;
+            isPlaying = true;
+            toggleUI(true);
+
+            const start = audioCtx.currentTime + 0.1;
+            sequence.forEach((item, i) => {
+                const time = start + (i * MEASURE_DURATION);
+                const stopTime = time + MEASURE_DURATION + 0.15; 
+
+                const source = audioCtx.createBufferSource();
+                const gain = audioCtx.createGain();
+                source.buffer = item.buffer;
+
+                gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(1, time + 0.005);
+                gain.gain.setValueAtTime(1, time + MEASURE_DURATION);
+                gain.gain.linearRampToValueAtTime(0, stopTime);
+
+                source.connect(gain);
+                gain.connect(masterGain);
+                if (reverbNode) gain.connect(reverbNode);
+
+                source.start(time);
+                source.stop(stopTime);
+                activeNodes.push({source, gain});
+
+                const timer = setTimeout(() => highlight(i), (time - audioCtx.currentTime) * 1000);
+                visualTimers.push(timer);
+            });
+
+            const total = sequence.length * MEASURE_DURATION;
+            visualTimers.push(setTimeout(stop, (start + total - audioCtx.currentTime) * 1000));
+        }
+
+        function highlight(idx) {
+            document.querySelectorAll('.sequence-item').forEach(el => el.classList.remove('ring-4', 'ring-sky-500', 'scale-105', 'z-10'));
+            const el = document.getElementById(`m-${idx}`);
+            if (el) {
+                el.classList.add('ring-4', 'ring-sky-500', 'scale-105', 'z-10');
+                el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function stop() {
+            isPlaying = false;
+            activeNodes.forEach(n => {
+                try {
+                    n.gain.gain.cancelScheduledValues(audioCtx.currentTime);
+                    n.gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+                    setTimeout(() => n.source.stop(), 50);
+                } catch(e) {}
+            });
+            activeNodes = [];
+            visualTimers.forEach(clearTimeout);
+            visualTimers = [];
+            highlight(-1);
+            toggleUI(false);
+        }
+
+        function toggleUI(playing) {
+            playBtn.classList.toggle('hidden', playing);
+            stopBtn.classList.toggle('hidden', !playing);
+            bpmSlider.disabled = playing;
+            statusText.innerText = playing ? "Swing Ativado" : "Pronto";
+        }
+
+        playBtn.onclick = play;
+        stopBtn.onclick = stop;
+        document.getElementById('clear-btn').onclick = () => { if(!isPlaying) { sequence=[]; renderSequence(); }};
+
+    </script>
+</body>
+</html>
