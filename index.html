@@ -239,7 +239,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v5.8 | High-Density View</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v5.9 | High-Density View</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -251,7 +251,7 @@
             <h2 class="text-xl font-bold mb-4 text-sky-500 uppercase tracking-tighter">Exportar Sequência</h2>
             <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
                 <button id="exp-img-btn" class="flex-1 min-w-[100px] py-2 bg-emerald-600 text-white rounded-lg font-bold text-[9px] uppercase">COMO IMAGEM</button>
-                <button id="exp-mus-btn" class="flex-1 min-w-[100px] py-2 bg-indigo-600 text-white rounded-lg font-bold text-[9px] uppercase">COMO MUSESCORE</button>
+                <button id="exp-mus-btn" class="flex-1 min-w-[100px] py-2 bg-indigo-600 text-white rounded-lg font-bold text-[9px] uppercase">COMO XML</button>
                 <button id="exp-tab-btn" class="flex-1 min-w-[100px] py-2 bg-sky-500 text-white rounded-lg font-bold text-[9px] uppercase">COMO TABELA</button>
                 <button id="exp-biab-btn" class="flex-1 min-w-[100px] py-2 bg-slate-700 text-white rounded-lg font-bold text-[9px] uppercase">COMO BIAB</button>
             </div>
@@ -262,7 +262,7 @@
             <div class="flex gap-2">
                 <button id="copy-btn" class="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-bold text-xs uppercase">Copiar Texto</button>
                 <button id="download-img-btn" class="hidden flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold text-xs uppercase">Download PNG</button>
-                <button id="download-mus-btn" class="hidden flex-1 py-3 bg-indigo-500 text-white rounded-xl font-bold text-xs uppercase">Baixar .MusicXML</button>
+                <button id="download-mus-btn" class="hidden flex-1 py-3 bg-indigo-500 text-white rounded-xl font-bold text-xs uppercase">Baixar .XML</button>
                 <button id="close-modal" class="px-6 py-3 btn-secondary rounded-xl font-bold text-xs uppercase">Fechar</button>
             </div>
         </div>
@@ -580,8 +580,8 @@
             return `[Song]\n[Chords]\n${chordsText.trim()}\n[ChordsEnd]\n[SongEnd]`;
         }
 
-        // --- NOVO: EXPORTAR MUSESCORE (MusicXML) ---
-        function getMuseScoreExport() {
+        // --- EXPORTAR XML (MusicXML) ---
+        function getXmlExport() {
             let xml = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
@@ -591,12 +591,10 @@
   <part id="P1">`;
 
             sequence.forEach((item, i) => {
-                // Parse Root and Type from label (e.g., C#maj7)
                 const match = item.label.match(/^([A-Ga-g][#b]?)(.*)$/);
                 let root = match ? match[1] : "C";
                 let type = match ? match[2] : "";
 
-                // Map type to MusicXML Harmony Kind
                 let kind = "major";
                 if (type === "maj7") kind = "major-seventh";
                 else if (type === "9") kind = "dominant-ninth";
@@ -615,7 +613,10 @@
         <divisions>1</divisions>
         <key><fifths>0</fifths></key>
         <time><beats>2</beats><beat-type>4</beat-type></time>
-        <clef><sign>G</clef>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
       </attributes>` : ""}
       <harmony>
         <root>
@@ -656,7 +657,7 @@
                 document.getElementById('exp-img-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
             } else if (type === 'mus') {
                 exportTextArea.classList.remove('hidden');
-                exportTextArea.value = getMuseScoreExport();
+                exportTextArea.value = getXmlExport();
                 document.getElementById('download-mus-btn').classList.remove('hidden');
                 document.getElementById('exp-mus-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
             } else {
@@ -691,7 +692,7 @@
         };
 
         document.getElementById('download-mus-btn').onclick = () => {
-            const blob = new Blob([getMuseScoreExport()], { type: 'text/xml' });
+            const blob = new Blob([getXmlExport()], { type: 'text/xml' });
             const link = document.createElement('a');
             link.download = 'harmonia-swing.musicxml';
             link.href = URL.createObjectURL(blob);
