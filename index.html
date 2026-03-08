@@ -34,7 +34,7 @@
             border-color: #334155;
         }
 
-        /* Tema Claro (Suave, utilizando #D4CFC9 como cor mais clara) */
+        /* Tema Claro (Utilizando #D4CFC9 como base mais clara) */
         .light {
             background-color: #BDB7B0; 
             color: #1e293b;
@@ -60,7 +60,7 @@
             border-color: #0284c7;
         }
         .light .column-header {
-            color: #64748b;
+            color: #475569;
         }
         .light input[type=range] {
             background-color: #BDB7B0;
@@ -82,7 +82,7 @@
 
         /* Blocos ULTRA compactos */
         .sequence-item {
-            height: 28px; 
+            height: 30px; 
             display: flex;
             flex-direction: row;
             justify-content: center;
@@ -116,7 +116,7 @@
 
         .column-header {
             font-size: 8px;
-            line-height: 1;
+            line-height: 1.1;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -239,7 +239,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v5.6 | High-Density View</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v5.7 | High-Density View</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -324,6 +324,7 @@
         }
 
         // --- DADOS MUSICAIS ---
+        // 'file' refere-se estritamente aos sustenidos (cs, ds, fs, gs, as) conforme solicitado.
         const noteData = [
             { display: 'B', file: 'b' },
             { display: 'A#/Bb', file: 'as' },
@@ -391,10 +392,13 @@
                 btn.className = 'chord-btn rounded font-semibold border-b border-slate-900 dark:border-slate-950 shadow-sm transition-all hover:bg-sky-500 hover:text-white bg-slate-700 text-white';
                 const fullLabel = note.display + type.label;
                 btn.innerText = fullLabel;
-                const file = `swing130_${note.file}${type.suffix}.mp3`;
+                
+                // O nome do arquivo utiliza estritamente o valor de 'note.file' (sustenidos apenas)
+                const fileName = `swing130_${note.file}${type.suffix}.mp3`;
+                
                 btn.onclick = async () => {
                     await initAudioContext();
-                    addOrReplaceChord(fullLabel, file);
+                    addOrReplaceChord(fullLabel, fileName);
                 };
                 gridContainer.appendChild(btn);
             });
@@ -434,7 +438,7 @@
                 div.id = `m-${i}`;
                 
                 div.innerHTML = `
-                    <span class="absolute top-0 left-0.5 text-[12px] opacity-40 font-mono font-bold">${i + 1}</span>
+                    <span class="absolute top-0 left-0.5 text-[12px] opacity-40 font-mono font-bold leading-none">${i + 1}</span>
                     <span class="text-[10px] font-bold tracking-tighter leading-none">${item.label}</span>
                 `;
 
@@ -508,7 +512,7 @@
             
             ctx.fillStyle = '#0ea5e9';
             ctx.font = 'bold 24px Inter, sans-serif';
-            ctx.fillText('Swing Studio — Estrutura Harmônica', padding, padding + 25);
+            ctx.fillText('Tocador de Acordes: Swing 130', padding, padding + 25);
             ctx.font = '12px Inter, sans-serif';
             ctx.fillStyle = '#64748b';
             ctx.fillText('DAC/UFSCar - Professor Glauber Santiago', padding, padding + 45);
@@ -524,8 +528,9 @@
                 ctx.fillStyle = '#0ea5e9';
                 ctx.fillRect(x + mWidth - 7, y, 3, mHeight - 4);
                 
+                // Números maiores também na exportação
                 ctx.fillStyle = '#94a3b8';
-                ctx.font = 'bold 16px monospace';
+                ctx.font = 'bold 12px monospace';
                 ctx.fillText(i + 1, x + 3, y + 15);
                 
                 ctx.fillStyle = '#1e293b';
@@ -596,7 +601,7 @@
 
         document.getElementById('download-img-btn').onclick = () => {
             const link = document.createElement('a');
-            link.download = 'minha-sequencia-swing.png';
+            link.download = 'sequencia-swing-130.png';
             link.href = exportCanvas.toDataURL('image/png');
             link.click();
         };
