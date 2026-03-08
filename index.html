@@ -225,7 +225,7 @@
                 <p>Elaborado pelo professor <strong>Glauber Santiago</strong> — DAC/UFSCar.</p>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[9px] opacity-30 font-mono uppercase">Swing Engine v5.1 | High Precision</p>
+                <p class="text-[9px] opacity-30 font-mono uppercase">Swing Engine v5.2 | High Precision</p>
                 <p class="text-[9px] opacity-40 font-medium tracking-tight italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -235,13 +235,18 @@
     <div id="export-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="card w-full max-w-2xl p-6 rounded-2xl border shadow-2xl relative">
             <h2 class="text-xl font-bold mb-4 text-sky-500">Exportar Sequência</h2>
-            <div class="flex gap-2 mb-4">
-                <button id="exp-tab-btn" class="flex-1 py-2 bg-sky-500 text-white rounded-lg font-bold text-xs">COMO TABELA</button>
-                <button id="exp-biab-btn" class="flex-1 py-2 bg-slate-700 text-white rounded-lg font-bold text-xs">COMO BIAB</button>
+            <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
+                <button id="exp-img-btn" class="flex-1 min-w-[120px] py-2 bg-emerald-600 text-white rounded-lg font-bold text-[10px] uppercase shadow-md">COMO IMAGEM</button>
+                <button id="exp-tab-btn" class="flex-1 min-w-[120px] py-2 bg-sky-500 text-white rounded-lg font-bold text-[10px] uppercase">COMO TABELA</button>
+                <button id="exp-biab-btn" class="flex-1 min-w-[120px] py-2 bg-slate-700 text-white rounded-lg font-bold text-[10px] uppercase">COMO BIAB</button>
             </div>
-            <textarea id="export-text" class="w-full h-48 p-4 bg-slate-900/50 dark:bg-slate-900 border border-slate-700 rounded-xl font-mono text-sm mb-4" readonly></textarea>
+            <div id="export-preview-container" class="mb-4">
+                <textarea id="export-text" class="w-full h-48 p-4 bg-slate-900/50 dark:bg-slate-900 border border-slate-700 rounded-xl font-mono text-sm mb-4" readonly></textarea>
+                <canvas id="export-canvas" class="hidden w-full border border-slate-700 rounded-xl bg-white"></canvas>
+            </div>
             <div class="flex gap-2">
                 <button id="copy-btn" class="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-bold text-xs">COPIAR TEXTO</button>
+                <button id="download-img-btn" class="hidden flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold text-xs uppercase tracking-wider">Download .PNG</button>
                 <button id="close-modal" class="px-6 py-3 btn-secondary rounded-xl font-bold text-xs">FECHAR</button>
             </div>
         </div>
@@ -343,6 +348,7 @@
         const statusText = document.getElementById('status-text');
         const exportModal = document.getElementById('export-modal');
         const exportTextArea = document.getElementById('export-text');
+        const exportCanvas = document.getElementById('export-canvas');
 
         // Controles UI
         document.getElementById('reverb-slider').addEventListener('input', (e) => {
@@ -471,6 +477,60 @@
         }
 
         // --- EXPORTAR ---
+        function generateImageExport() {
+            const cols = 4;
+            const rows = Math.ceil(sequence.length / cols);
+            const mWidth = 200;
+            const mHeight = 100;
+            const padding = 20;
+            
+            exportCanvas.width = (cols * mWidth) + (padding * 2);
+            exportCanvas.height = (rows * mHeight) + (padding * 2) + 60; // Extra para título
+            
+            const ctx = exportCanvas.getContext('2d');
+            
+            // Fundo
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+            
+            // Título
+            ctx.fillStyle = '#0ea5e9';
+            ctx.font = 'bold 24px Inter, sans-serif';
+            ctx.fillText('Swing Studio — Estrutura Harmônica', padding, padding + 25);
+            ctx.font = '12px Inter, sans-serif';
+            ctx.fillStyle = '#64748b';
+            ctx.fillText('DAC/UFSCar - Professor Glauber Santiago', padding, padding + 45);
+
+            // Compassos
+            sequence.forEach((item, i) => {
+                const x = padding + (i % cols) * mWidth;
+                const y = padding + 70 + Math.floor(i / cols) * mHeight;
+                
+                // Caixa
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(x, y, mWidth - 10, mHeight - 10);
+                
+                // Barra de compasso (azul)
+                ctx.fillStyle = '#0ea5e9';
+                ctx.fillRect(x + mWidth - 14, y, 4, mHeight - 10);
+                
+                // Número
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = 'bold 10px monospace';
+                ctx.fillText(i + 1, x + 5, y + 15);
+                
+                // Acorde
+                ctx.fillStyle = '#1e293b';
+                ctx.font = 'bold 22px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(item.label, x + (mWidth / 2) - 5, y + (mHeight / 2) + 5);
+                ctx.textAlign = 'start';
+            });
+
+            exportCanvas.classList.remove('hidden');
+        }
+
         function getTableExport() {
             let text = "| Compasso | Acorde |\n|-----------|---------|\n";
             sequence.forEach((item, i) => {
@@ -488,22 +548,50 @@
             return `[Song]\n[Chords]\n${chordsText.trim()}\n[ChordsEnd]\n[SongEnd]`;
         }
 
+        function showExportView(type) {
+            exportTextArea.classList.add('hidden');
+            exportCanvas.classList.add('hidden');
+            document.getElementById('copy-btn').classList.add('hidden');
+            document.getElementById('download-img-btn').classList.add('hidden');
+
+            // Reset buttons
+            [ 'exp-img-btn', 'exp-tab-btn', 'exp-biab-btn' ].forEach(id => {
+                document.getElementById(id).classList.remove('ring-2', 'ring-white', 'opacity-100');
+                document.getElementById(id).classList.add('opacity-80');
+            });
+
+            if (type === 'img') {
+                generateImageExport();
+                document.getElementById('download-img-btn').classList.remove('hidden');
+                document.getElementById('exp-img-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
+            } else {
+                exportTextArea.classList.remove('hidden');
+                document.getElementById('copy-btn').classList.remove('hidden');
+                if (type === 'tab') {
+                    exportTextArea.value = getTableExport();
+                    document.getElementById('exp-tab-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
+                } else {
+                    exportTextArea.value = getBIABExport();
+                    document.getElementById('exp-biab-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
+                }
+            }
+        }
+
         document.getElementById('export-btn').onclick = () => {
             if (sequence.length === 0) return;
-            exportTextArea.value = getTableExport();
             exportModal.classList.remove('hidden');
+            showExportView('img'); // Default to image as requested
         };
 
-        document.getElementById('exp-tab-btn').onclick = () => {
-            exportTextArea.value = getTableExport();
-            document.getElementById('exp-tab-btn').classList.replace('bg-slate-700', 'bg-sky-500');
-            document.getElementById('exp-biab-btn').classList.replace('bg-sky-500', 'bg-slate-700');
-        };
+        document.getElementById('exp-img-btn').onclick = () => showExportView('img');
+        document.getElementById('exp-tab-btn').onclick = () => showExportView('tab');
+        document.getElementById('exp-biab-btn').onclick = () => showExportView('biab');
 
-        document.getElementById('exp-biab-btn').onclick = () => {
-            exportTextArea.value = getBIABExport();
-            document.getElementById('exp-biab-btn').classList.replace('bg-slate-700', 'bg-sky-500');
-            document.getElementById('exp-tab-btn').classList.replace('bg-sky-500', 'bg-slate-700');
+        document.getElementById('download-img-btn').onclick = () => {
+            const link = document.createElement('a');
+            link.download = 'minha-sequencia-swing.png';
+            link.href = exportCanvas.toDataURL('image/png');
+            link.click();
         };
 
         document.getElementById('close-modal').onclick = () => exportModal.classList.add('hidden');
