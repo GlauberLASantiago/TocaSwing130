@@ -34,25 +34,25 @@
             border-color: #334155;
         }
 
-        /* Tema Claro (Suave e Moderno) */
+        /* Tema Claro (Suave, utilizando #D4CFC9 como cor mais clara) */
         .light {
-            background-color: #f1f5f9; 
+            background-color: #BDB7B0; /* Um tom levemente mais escuro que a cor base para contraste */
             color: #1e293b;
         }
         .light .card {
-            background-color: #ffffff;
-            border-color: #e2e8f0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            background-color: #D4CFC9; /* Cor base solicitada (a mais clara) */
+            border-color: #A39D95;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         .light .btn-secondary {
-            background-color: #f8fafc;
+            background-color: #C7C2BA;
             color: #475569;
-            border-color: #cbd5e1;
+            border-color: #A39D95;
         }
         .light .chord-btn {
-            background-color: #ffffff;
+            background-color: #D4CFC9;
             color: #334155;
-            border-color: #cbd5e1;
+            border-color: #BDB7B0;
         }
         .light .chord-btn:hover {
             background-color: #0ea5e9;
@@ -61,6 +61,9 @@
         }
         .light .column-header {
             color: #64748b;
+        }
+        .light input[type=range] {
+            background-color: #BDB7B0;
         }
 
         /* Grid Ultra Compacto para a Tabela de Acordes */
@@ -174,7 +177,7 @@
                 <!-- Controle de Reverb -->
                 <div class="flex items-center gap-2 px-2 border-r border-slate-700/30 pr-3">
                     <label class="text-[8px] uppercase opacity-50 font-bold">Reverb</label>
-                    <input type="range" id="reverb-slider" min="0" max="100" value="25" class="w-20 h-1 bg-slate-300 dark:bg-slate-900 rounded-lg appearance-none cursor-pointer">
+                    <input type="range" id="reverb-slider" min="0" max="100" value="25" class="w-20 h-1 rounded-lg appearance-none cursor-pointer">
                     <span id="reverb-val" class="text-[9px] font-mono text-sky-500 w-4">25</span>
                 </div>
 
