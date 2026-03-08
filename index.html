@@ -429,7 +429,7 @@
                 div.id = `m-${i}`;
                 
                 div.innerHTML = `
-                    <span class="absolute top-0 left-0.5 text-[6px] opacity-40 font-mono font-bold">${i + 1}</span>
+                    <span class="absolute top-0 left-0.5 text-[12px] opacity-40 font-mono font-bold">${i + 1}</span>
                     <span class="text-[10px] font-bold tracking-tighter leading-none">${item.label}</span>
                 `;
 
@@ -520,8 +520,8 @@
                 ctx.fillRect(x + mWidth - 7, y, 3, mHeight - 4);
                 
                 ctx.fillStyle = '#94a3b8';
-                ctx.font = 'bold 8px monospace';
-                ctx.fillText(i + 1, x + 3, y + 10);
+                ctx.font = 'bold 16px monospace';
+                ctx.fillText(i + 1, x + 3, y + 15);
                 
                 ctx.fillStyle = '#1e293b';
                 ctx.font = 'bold 13px Inter, sans-serif';
