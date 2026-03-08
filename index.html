@@ -63,34 +63,35 @@
             color: #64748b;
         }
 
-        /* Grid Ultra Compacto */
+        /* Grid Ultra Compacto para a Tabela de Acordes */
         .chord-grid {
             display: grid;
             grid-template-columns: 70px repeat(6, 1fr);
             gap: 2px;
         }
 
-        /* Alterado para 8 compassos por linha */
+        /* 8 compassos por linha - Gaps reduzidos */
         .measure-grid {
             display: grid;
             grid-template-columns: repeat(8, 1fr);
-            gap: 6px;
+            gap: 4px;
         }
 
-        /* Altura reduzida (aspect-ratio maior) */
+        /* Blocos MUITO menores (aspect-ratio maior e altura fixa mínima menor) */
         .sequence-item {
-            aspect-ratio: 3 / 1;
+            aspect-ratio: 4.5 / 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             position: relative;
             transition: all 0.2s ease;
+            min-height: 32px;
         }
 
         .editing-highlight {
             border-color: #f59e0b !important;
-            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
             background-color: rgba(245, 158, 11, 0.05) !important;
         }
 
@@ -130,21 +131,27 @@
             padding: 4px;
         }
 
-        /* Modal de Opções */
+        /* Modal de Opções adaptado para blocos minúsculos */
         .options-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             display: flex;
-            flex-direction: column;
-            gap: 2px;
-            padding: 4px;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 3px;
+            padding: 2px;
             z-index: 20;
             border-radius: inherit;
         }
         .options-overlay button {
-            font-size: 8px;
-            padding: 2px 0;
+            font-size: 7px;
+            padding: 2px 4px;
+            line-height: 1;
+            height: 80%;
+            display: flex;
+            align-items: center;
         }
 
         /* Modal de Exportar */
@@ -204,8 +211,8 @@
         <main class="flex flex-col gap-4">
             <!-- Partitura / Sequência -->
             <section class="w-full">
-                <div id="sequence-list" class="measure-grid min-h-[140px] card border-2 rounded-xl p-4 overflow-y-auto max-h-[250px]">
-                    <p id="empty-msg" class="col-span-8 opacity-40 text-xs text-center py-10 italic">Selecione acordes abaixo para montar sua estrutura (8 por linha)...</p>
+                <div id="sequence-list" class="measure-grid min-h-[140px] card border-2 rounded-xl p-3 overflow-y-auto max-h-[300px]">
+                    <p id="empty-msg" class="col-span-8 opacity-40 text-[10px] text-center py-10 italic">Selecione acordes abaixo para montar sua estrutura (8 por linha)...</p>
                 </div>
             </section>
 
@@ -231,7 +238,7 @@
                 <p>Elaborado pelo professor <strong>Glauber Santiago</strong> — DAC/UFSCar.</p>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[9px] opacity-30 font-mono uppercase">Swing Engine v5.3 | High Precision</p>
+                <p class="text-[9px] opacity-30 font-mono uppercase">Swing Engine v5.4 | Ultra Compact</p>
                 <p class="text-[9px] opacity-40 font-medium tracking-tight italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -414,7 +421,7 @@
         function renderSequence() {
             sequenceList.innerHTML = '';
             if (sequence.length === 0) {
-                sequenceList.innerHTML = '<p class="col-span-8 opacity-40 text-xs text-center py-10 italic">Selecione acordes abaixo para montar sua estrutura (8 por linha)...</p>';
+                sequenceList.innerHTML = '<p class="col-span-8 opacity-40 text-[10px] text-center py-10 italic">Selecione acordes abaixo para montar sua estrutura (8 por linha)...</p>';
                 return;
             }
             sequence.forEach((item, i) => {
@@ -422,21 +429,21 @@
                 const isEditing = (editingIndex === i);
                 const isMenu = (menuActiveIndex === i);
 
-                div.className = `sequence-item card border-r-2 border-r-sky-500 rounded-lg shadow-sm group cursor-pointer transition-all border ${isEditing ? 'editing-highlight' : ''}`;
+                div.className = `sequence-item card border-r-2 border-r-sky-500 rounded shadow-sm group cursor-pointer transition-all border ${isEditing ? 'editing-highlight' : ''}`;
                 div.id = `m-${i}`;
                 
                 div.innerHTML = `
-                    <span class="absolute top-0.5 left-1 text-[7px] opacity-40 font-mono font-bold">${i + 1}</span>
-                    <span class="text-[13px] font-bold tracking-tight">${item.label}</span>
+                    <span class="absolute top-0 left-1 text-[7px] opacity-40 font-mono font-bold">${i + 1}</span>
+                    <span class="text-[11px] font-bold tracking-tighter">${item.label}</span>
                 `;
 
                 if (isMenu) {
                     const overlay = document.createElement('div');
                     overlay.className = 'options-overlay';
                     overlay.innerHTML = `
-                        <button class="bg-sky-500 hover:bg-sky-400 text-white font-bold py-0.5 rounded">SUB</button>
-                        <button class="bg-rose-500 hover:bg-rose-400 text-white font-bold py-0.5 rounded">DEL</button>
-                        <button class="bg-slate-600 hover:bg-slate-500 text-white rounded mt-auto">X</button>
+                        <button class="bg-sky-500 hover:bg-sky-400 text-white font-bold rounded">SUB</button>
+                        <button class="bg-rose-500 hover:bg-rose-400 text-white font-bold rounded">DEL</button>
+                        <button class="bg-slate-600 hover:bg-slate-500 text-white rounded">X</button>
                     `;
                     
                     const [btnReplace, btnDelete, btnCancel] = overlay.querySelectorAll('button');
@@ -487,7 +494,7 @@
             const cols = 8;
             const rows = Math.ceil(sequence.length / cols);
             const mWidth = 140;
-            const mHeight = 60;
+            const mHeight = 50;
             const padding = 20;
             
             exportCanvas.width = (cols * mWidth) + (padding * 2);
@@ -521,7 +528,7 @@
                 ctx.fillText(i + 1, x + 4, y + 10);
                 
                 ctx.fillStyle = '#1e293b';
-                ctx.font = 'bold 16px Inter, sans-serif';
+                ctx.font = 'bold 14px Inter, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.fillText(item.label, x + (mWidth / 2) - 3, y + (mHeight / 2) + 5);
                 ctx.textAlign = 'start';
@@ -641,10 +648,10 @@
         }
 
         function highlight(idx) {
-            document.querySelectorAll('.sequence-item').forEach(el => el.classList.remove('ring-4', 'ring-sky-500/50', 'scale-105', 'z-10', 'bg-sky-500/10'));
+            document.querySelectorAll('.sequence-item').forEach(el => el.classList.remove('ring-2', 'ring-sky-500', 'scale-105', 'z-10', 'bg-sky-500/10'));
             const el = document.getElementById(`m-${idx}`);
             if (el) {
-                el.classList.add('ring-4', 'ring-sky-500/50', 'scale-105', 'z-10', 'bg-sky-500/10');
+                el.classList.add('ring-2', 'ring-sky-500', 'scale-105', 'z-10', 'bg-sky-500/10');
                 el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         }
