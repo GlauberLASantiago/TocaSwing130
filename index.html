@@ -70,14 +70,16 @@
             gap: 2px;
         }
 
+        /* Alterado para 8 compassos por linha */
         .measure-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 6px;
         }
 
+        /* Altura reduzida (aspect-ratio maior) */
         .sequence-item {
-            aspect-ratio: 2.2 / 1;
+            aspect-ratio: 3 / 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -135,10 +137,14 @@
             background: rgba(0,0,0,0.8);
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            padding: 6px;
+            gap: 2px;
+            padding: 4px;
             z-index: 20;
             border-radius: inherit;
+        }
+        .options-overlay button {
+            font-size: 8px;
+            padding: 2px 0;
         }
 
         /* Modal de Exportar */
@@ -199,7 +205,7 @@
             <!-- Partitura / Sequência -->
             <section class="w-full">
                 <div id="sequence-list" class="measure-grid min-h-[140px] card border-2 rounded-xl p-4 overflow-y-auto max-h-[250px]">
-                    <p id="empty-msg" class="col-span-4 opacity-40 text-xs text-center py-10 italic">Selecione acordes abaixo para montar sua estrutura (4 por linha)...</p>
+                    <p id="empty-msg" class="col-span-8 opacity-40 text-xs text-center py-10 italic">Selecione acordes abaixo para montar sua estrutura (8 por linha)...</p>
                 </div>
             </section>
 
@@ -225,7 +231,7 @@
                 <p>Elaborado pelo professor <strong>Glauber Santiago</strong> — DAC/UFSCar.</p>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[9px] opacity-30 font-mono uppercase">Swing Engine v5.2 | High Precision</p>
+                <p class="text-[9px] opacity-30 font-mono uppercase">Swing Engine v5.3 | High Precision</p>
                 <p class="text-[9px] opacity-40 font-medium tracking-tight italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -408,7 +414,7 @@
         function renderSequence() {
             sequenceList.innerHTML = '';
             if (sequence.length === 0) {
-                sequenceList.innerHTML = '<p class="col-span-4 opacity-40 text-xs text-center py-10 italic">Selecione acordes abaixo para montar sua estrutura (4 por linha)...</p>';
+                sequenceList.innerHTML = '<p class="col-span-8 opacity-40 text-xs text-center py-10 italic">Selecione acordes abaixo para montar sua estrutura (8 por linha)...</p>';
                 return;
             }
             sequence.forEach((item, i) => {
@@ -416,21 +422,21 @@
                 const isEditing = (editingIndex === i);
                 const isMenu = (menuActiveIndex === i);
 
-                div.className = `sequence-item card border-r-4 border-r-sky-500 rounded-xl shadow-md group cursor-pointer transition-all border ${isEditing ? 'editing-highlight' : ''}`;
+                div.className = `sequence-item card border-r-2 border-r-sky-500 rounded-lg shadow-sm group cursor-pointer transition-all border ${isEditing ? 'editing-highlight' : ''}`;
                 div.id = `m-${i}`;
                 
                 div.innerHTML = `
-                    <span class="absolute top-1 left-2 text-[8px] opacity-40 font-mono font-bold">${i + 1}</span>
-                    <span class="text-base font-bold tracking-tight">${item.label}</span>
+                    <span class="absolute top-0.5 left-1 text-[7px] opacity-40 font-mono font-bold">${i + 1}</span>
+                    <span class="text-[13px] font-bold tracking-tight">${item.label}</span>
                 `;
 
                 if (isMenu) {
                     const overlay = document.createElement('div');
                     overlay.className = 'options-overlay';
                     overlay.innerHTML = `
-                        <button class="bg-sky-500 hover:bg-sky-400 text-white text-[9px] font-bold py-1 rounded shadow-sm">SUBSTITUIR</button>
-                        <button class="bg-rose-500 hover:bg-rose-400 text-white text-[9px] font-bold py-1 rounded shadow-sm">DELETAR</button>
-                        <button class="bg-slate-600 hover:bg-slate-500 text-white text-[8px] py-1 rounded mt-auto uppercase">Fechar</button>
+                        <button class="bg-sky-500 hover:bg-sky-400 text-white font-bold py-0.5 rounded">SUB</button>
+                        <button class="bg-rose-500 hover:bg-rose-400 text-white font-bold py-0.5 rounded">DEL</button>
+                        <button class="bg-slate-600 hover:bg-slate-500 text-white rounded mt-auto">X</button>
                     `;
                     
                     const [btnReplace, btnDelete, btnCancel] = overlay.querySelectorAll('button');
@@ -440,7 +446,7 @@
                         editingIndex = i;
                         menuActiveIndex = null;
                         renderSequence();
-                        statusText.innerText = "Selecione o novo acorde...";
+                        statusText.innerText = "Substituindo...";
                     };
                     
                     btnDelete.onclick = (e) => {
@@ -478,22 +484,20 @@
 
         // --- EXPORTAR ---
         function generateImageExport() {
-            const cols = 4;
+            const cols = 8;
             const rows = Math.ceil(sequence.length / cols);
-            const mWidth = 200;
-            const mHeight = 100;
+            const mWidth = 140;
+            const mHeight = 60;
             const padding = 20;
             
             exportCanvas.width = (cols * mWidth) + (padding * 2);
-            exportCanvas.height = (rows * mHeight) + (padding * 2) + 60; // Extra para título
+            exportCanvas.height = (rows * mHeight) + (padding * 2) + 60;
             
             const ctx = exportCanvas.getContext('2d');
             
-            // Fundo
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
             
-            // Título
             ctx.fillStyle = '#0ea5e9';
             ctx.font = 'bold 24px Inter, sans-serif';
             ctx.fillText('Swing Studio — Estrutura Harmônica', padding, padding + 25);
@@ -501,30 +505,25 @@
             ctx.fillStyle = '#64748b';
             ctx.fillText('DAC/UFSCar - Professor Glauber Santiago', padding, padding + 45);
 
-            // Compassos
             sequence.forEach((item, i) => {
                 const x = padding + (i % cols) * mWidth;
                 const y = padding + 70 + Math.floor(i / cols) * mHeight;
                 
-                // Caixa
                 ctx.strokeStyle = '#e2e8f0';
                 ctx.lineWidth = 1;
-                ctx.strokeRect(x, y, mWidth - 10, mHeight - 10);
+                ctx.strokeRect(x, y, mWidth - 5, mHeight - 5);
                 
-                // Barra de compasso (azul)
                 ctx.fillStyle = '#0ea5e9';
-                ctx.fillRect(x + mWidth - 14, y, 4, mHeight - 10);
+                ctx.fillRect(x + mWidth - 8, y, 3, mHeight - 5);
                 
-                // Número
                 ctx.fillStyle = '#94a3b8';
-                ctx.font = 'bold 10px monospace';
-                ctx.fillText(i + 1, x + 5, y + 15);
+                ctx.font = 'bold 8px monospace';
+                ctx.fillText(i + 1, x + 4, y + 10);
                 
-                // Acorde
                 ctx.fillStyle = '#1e293b';
-                ctx.font = 'bold 22px Inter, sans-serif';
+                ctx.font = 'bold 16px Inter, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(item.label, x + (mWidth / 2) - 5, y + (mHeight / 2) + 5);
+                ctx.fillText(item.label, x + (mWidth / 2) - 3, y + (mHeight / 2) + 5);
                 ctx.textAlign = 'start';
             });
 
@@ -542,7 +541,6 @@
         function getBIABExport() {
             let chordsText = "|:a) ";
             sequence.forEach((item, i) => {
-                // Remove parênteses para compatibilidade com Band in a Box
                 const cleanLabel = item.label.replace(/\(|\)/g, "");
                 chordsText += cleanLabel + "| ";
             });
@@ -556,7 +554,6 @@
             document.getElementById('copy-btn').classList.add('hidden');
             document.getElementById('download-img-btn').classList.add('hidden');
 
-            // Reset buttons
             [ 'exp-img-btn', 'exp-tab-btn', 'exp-biab-btn' ].forEach(id => {
                 document.getElementById(id).classList.remove('ring-2', 'ring-white', 'opacity-100');
                 document.getElementById(id).classList.add('opacity-80');
