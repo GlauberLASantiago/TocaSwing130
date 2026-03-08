@@ -33,6 +33,13 @@
             color: #f1f5f9;
             border-color: #334155;
         }
+        /* Ajuste: Efeito hover para botões no modo escuro */
+        .dark .chord-btn:hover {
+            background-color: #0ea5e9;
+            color: white;
+            border-color: #38bdf8;
+            transform: translateY(-1px);
+        }
         .dark .note-label {
             background-color: #1e293b;
             border-color: #334155;
@@ -68,6 +75,7 @@
             background-color: #0ea5e9;
             color: white;
             border-color: #0284c7;
+            transform: translateY(-1px);
         }
         .light .note-label {
             background-color: #D4CFC9;
@@ -129,6 +137,13 @@
 
         .chord-btn.highlight-major.highlight-minor {
             background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%) !important;
+        }
+
+        /* Feedback visual no hover para botões já destacados */
+        .chord-btn.highlight-major:hover,
+        .chord-btn.highlight-minor:hover {
+            filter: brightness(1.15);
+            box-shadow: 0 0 8px rgba(255,255,255,0.3);
         }
 
         input[type=range] {
@@ -345,7 +360,7 @@
                 
                 reverbNode = audioCtx.createConvolver();
                 reverbGain = audioCtx.createGain();
-                reverbNode.buffer = createImpulse(2.0, 1.8); // Duração e decay ajustados
+                reverbNode.buffer = createImpulse(2.0, 1.8); 
                 
                 reverbNode.connect(reverbGain);
                 reverbGain.connect(masterGain);
@@ -369,7 +384,6 @@
         }
 
         function updateReverbLevel(val) {
-            // Ganho do reverb aumentado para ser mais audível
             if (reverbGain) reverbGain.gain.setTargetAtTime(val / 80, audioCtx.currentTime, 0.05);
         }
 
@@ -692,7 +706,7 @@
         };
 
         document.getElementById('download-project-btn').onclick = () => {
-            const blob = new Blob([JSON.stringify({projeto:{identificacao:{titulo:workTitleInput.value,nome:authorNameInput.value},dados_harmonicos:sequence.map(i=>({label:i.label,arquivo:i.file}))}},null,2)], { type: 'text/plain' });
+            const blob = new Blob([getProjectData()], { type: 'text/plain' });
             const link = document.createElement('a'); link.download = getSanitizedFilename('txt'); link.href = URL.createObjectURL(blob); link.click();
         };
 
@@ -705,7 +719,7 @@
             let xml = `<?xml version="1.0" encoding="UTF-8"?><score-partwise version="3.1"><work><work-title>${title}</work-title></work><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list><part id="P1">`;
             sequence.forEach((item, i) => {
                 const match = item.label.match(/^([A-G][#b]?)(.*)$/);
-                let root = match[1], type = match[2], step = root.charAt(0), alter = root.includes("#")?"1":(root.includes("b")?"-1":"0");
+                let root = match ? match[1] : "C", type = match ? match[2] : "", step = root.charAt(0), alter = root.includes("#")?"1":(root.includes("b")?"-1":"0");
                 let kind = type==="maj7"?"major-seventh":type==="9"?"dominant-ninth":type.includes("m7")?"minor-seventh":"major";
                 xml += `<measure number="${i+1}">${i===0?`<attributes><divisions>1</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>` : ""}<harmony><root><root-step>${step}</root-step>${alter!=="0"?`<root-alter>${alter}</root-alter>` : ""}</root><kind>${kind}</kind></harmony><note><rest/><duration>4</duration><type>whole</type></note></measure>`;
             });
@@ -713,6 +727,10 @@
             const blob = new Blob([xml], { type: 'text/xml' });
             const link = document.createElement('a'); link.download = getSanitizedFilename('musicxml'); link.href = URL.createObjectURL(blob); link.click();
         };
+
+        function getProjectData() {
+            return JSON.stringify({projeto:{identificacao:{titulo:workTitleInput.value,nome:authorNameInput.value},dados_harmonicos:sequence.map(i=>({label:i.label,arquivo:i.file}))}},null,2);
+        }
 
         function showExportView(type) {
             exportTextArea.classList.add('hidden'); exportCanvas.classList.add('hidden'); document.getElementById('data-action-area').classList.add('hidden');
@@ -755,10 +773,9 @@
                 source.buffer = item.buffer;
                 gain.gain.setValueAtTime(0, time); gain.gain.linearRampToValueAtTime(1, time + 0.01); gain.gain.setValueAtTime(1, time + MEASURE_DURATION - 0.05); gain.gain.linearRampToValueAtTime(0, stopT);
                 
-                // Liga o reverb
                 source.connect(gain);
-                gain.connect(masterGain); // Sinal Seco
-                if (reverbNode) gain.connect(reverbNode); // Sinal com Reverb
+                gain.connect(masterGain);
+                if (reverbNode) gain.connect(reverbNode);
                 
                 source.start(time); source.stop(stopT); activeNodes.push({source, gain});
                 visualTimers.push(setTimeout(() => highlight(i), (time - now) * 1000));
