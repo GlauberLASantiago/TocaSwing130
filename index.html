@@ -324,7 +324,6 @@
         }
 
         // --- DADOS MUSICAIS ---
-        // 'file' refere-se estritamente aos sustenidos (cs, ds, fs, gs, as) conforme solicitado.
         const noteData = [
             { display: 'B', file: 'b' },
             { display: 'A#/Bb', file: 'as' },
@@ -380,7 +379,7 @@
                 : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
         });
 
-        // Gerar Grade Compacta
+        // Gerar Grade Compacta com divisão de enarmonia
         noteData.forEach(note => {
             const label = document.createElement('div');
             label.className = 'flex items-center justify-center font-bold text-sky-500 card rounded note-label border';
@@ -388,19 +387,41 @@
             gridContainer.appendChild(label);
 
             types.forEach(type => {
-                const btn = document.createElement('button');
-                btn.className = 'chord-btn rounded font-semibold border-b border-slate-900 dark:border-slate-950 shadow-sm transition-all hover:bg-sky-500 hover:text-white bg-slate-700 text-white';
-                const fullLabel = note.display + type.label;
-                btn.innerText = fullLabel;
-                
-                // O nome do arquivo utiliza estritamente o valor de 'note.file' (sustenidos apenas)
-                const fileName = `swing130_${note.file}${type.suffix}.mp3`;
-                
-                btn.onclick = async () => {
-                    await initAudioContext();
-                    addOrReplaceChord(fullLabel, fileName);
-                };
-                gridContainer.appendChild(btn);
+                if (note.display.includes('/')) {
+                    // Se houver enarmonia, divide em dois botões lado a lado
+                    const parts = note.display.split('/');
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'flex gap-0.5 h-[22px]';
+                    
+                    parts.forEach(p => {
+                        const btn = document.createElement('button');
+                        btn.className = 'chord-btn rounded font-semibold border-b border-slate-900 dark:border-slate-950 shadow-sm transition-all hover:bg-sky-500 hover:text-white bg-slate-700 text-white flex-1 text-[7px] p-0';
+                        const fullLabel = p + type.label;
+                        btn.innerText = fullLabel;
+                        // Ambos usam o mesmo arquivo sustenido (note.file)
+                        const fileName = `swing130_${note.file}${type.suffix}.mp3`;
+                        
+                        btn.onclick = async () => {
+                            await initAudioContext();
+                            addOrReplaceChord(fullLabel, fileName);
+                        };
+                        wrapper.appendChild(btn);
+                    });
+                    gridContainer.appendChild(wrapper);
+                } else {
+                    // Botão único normal
+                    const btn = document.createElement('button');
+                    btn.className = 'chord-btn rounded font-semibold border-b border-slate-900 dark:border-slate-950 shadow-sm transition-all hover:bg-sky-500 hover:text-white bg-slate-700 text-white';
+                    const fullLabel = note.display + type.label;
+                    btn.innerText = fullLabel;
+                    const fileName = `swing130_${note.file}${type.suffix}.mp3`;
+                    
+                    btn.onclick = async () => {
+                        await initAudioContext();
+                        addOrReplaceChord(fullLabel, fileName);
+                    };
+                    gridContainer.appendChild(btn);
+                }
             });
         });
 
@@ -560,7 +581,12 @@
                     .replace("G#/Ab", "G#")
                     .replace("F#/Gb", "F#")
                     .replace("D#/Eb", "D#")
-                    .replace("C#/Db", "C#");
+                    .replace("C#/Db", "C#")
+                    .replace("Bb", "A#") // Casos isolados de split label
+                    .replace("Ab", "G#")
+                    .replace("Gb", "F#")
+                    .replace("Eb", "D#")
+                    .replace("Db", "C#");
                 
                 // 2. Remove parênteses para compatibilidade com Band in a Box
                 cleanLabel = cleanLabel.replace(/\(|\)/g, "");
