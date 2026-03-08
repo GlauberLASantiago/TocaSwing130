@@ -36,16 +36,16 @@
 
         /* Tema Claro (Suave e Moderno) */
         .light {
-            background-color: #e2e8f0; 
+            background-color: #f1f5f9; 
             color: #1e293b;
         }
         .light .card {
-            background-color: #f8fafc;
-            border-color: #cbd5e1;
+            background-color: #ffffff;
+            border-color: #e2e8f0;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
         .light .btn-secondary {
-            background-color: #ffffff;
+            background-color: #f8fafc;
             color: #475569;
             border-color: #cbd5e1;
         }
@@ -60,7 +60,7 @@
             border-color: #0284c7;
         }
         .light .column-header {
-            color: #475569;
+            color: #64748b;
         }
 
         /* Grid Ultra Compacto */
@@ -140,6 +140,11 @@
             z-index: 20;
             border-radius: inherit;
         }
+
+        /* Modal de Exportar */
+        #export-modal {
+            transition: opacity 0.3s ease;
+        }
     </style>
 </head>
 <body class="dark p-2 md:p-6">
@@ -180,6 +185,9 @@
                     <button id="stop-btn" class="hidden bg-rose-500 hover:bg-rose-600 text-white px-6 py-2 rounded-lg font-bold transition-all active:scale-95 text-xs">
                         PARAR
                     </button>
+                    <button id="export-btn" class="btn-secondary px-4 py-2 rounded-lg font-bold border transition-all text-xs hover:bg-sky-500/10 hover:text-sky-500">
+                        EXPORTAR
+                    </button>
                     <button id="clear-btn" class="btn-secondary px-4 py-2 rounded-lg font-bold border transition-all text-xs hover:bg-rose-500/10 hover:text-rose-500">
                         LIMPAR
                     </button>
@@ -217,10 +225,26 @@
                 <p>Elaborado pelo professor <strong>Glauber Santiago</strong> — DAC/UFSCar.</p>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[9px] opacity-30 font-mono uppercase">Swing Engine v5.0 | High Precision</p>
+                <p class="text-[9px] opacity-30 font-mono uppercase">Swing Engine v5.1 | High Precision</p>
                 <p class="text-[9px] opacity-40 font-medium tracking-tight italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
+    </div>
+
+    <!-- Modal de Exportação -->
+    <div id="export-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="card w-full max-w-2xl p-6 rounded-2xl border shadow-2xl relative">
+            <h2 class="text-xl font-bold mb-4 text-sky-500">Exportar Sequência</h2>
+            <div class="flex gap-2 mb-4">
+                <button id="exp-tab-btn" class="flex-1 py-2 bg-sky-500 text-white rounded-lg font-bold text-xs">COMO TABELA</button>
+                <button id="exp-biab-btn" class="flex-1 py-2 bg-slate-700 text-white rounded-lg font-bold text-xs">COMO BIAB</button>
+            </div>
+            <textarea id="export-text" class="w-full h-48 p-4 bg-slate-900/50 dark:bg-slate-900 border border-slate-700 rounded-xl font-mono text-sm mb-4" readonly></textarea>
+            <div class="flex gap-2">
+                <button id="copy-btn" class="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-bold text-xs">COPIAR TEXTO</button>
+                <button id="close-modal" class="px-6 py-3 btn-secondary rounded-xl font-bold text-xs">FECHAR</button>
+            </div>
+        </div>
     </div>
 
     <!-- Script de lógica -->
@@ -309,14 +333,16 @@
         let isPlaying = false;
         let activeNodes = [];
         let visualTimers = [];
-        let editingIndex = null; // Índice do acorde sendo substituído
-        let menuActiveIndex = null; // Índice do acorde com menu aberto
+        let editingIndex = null; 
+        let menuActiveIndex = null; 
 
         const gridContainer = document.getElementById('grid-container');
         const sequenceList = document.getElementById('sequence-list');
         const playBtn = document.getElementById('play-btn');
         const stopBtn = document.getElementById('stop-btn');
         const statusText = document.getElementById('status-text');
+        const exportModal = document.getElementById('export-modal');
+        const exportTextArea = document.getElementById('export-text');
 
         // Controles UI
         document.getElementById('reverb-slider').addEventListener('input', (e) => {
@@ -392,7 +418,6 @@
                     <span class="text-base font-bold tracking-tight">${item.label}</span>
                 `;
 
-                // Menu de opções
                 if (isMenu) {
                     const overlay = document.createElement('div');
                     overlay.className = 'options-overlay';
@@ -445,6 +470,51 @@
             });
         }
 
+        // --- EXPORTAR ---
+        function getTableExport() {
+            let text = "| Compasso | Acorde |\n|-----------|---------|\n";
+            sequence.forEach((item, i) => {
+                text += `| ${i + 1} | ${item.label} |\n`;
+            });
+            return text;
+        }
+
+        function getBIABExport() {
+            let chordsText = "|:a) ";
+            sequence.forEach((item, i) => {
+                chordsText += item.label + "| ";
+            });
+            
+            return `[Song]\n[Chords]\n${chordsText.trim()}\n[ChordsEnd]\n[SongEnd]`;
+        }
+
+        document.getElementById('export-btn').onclick = () => {
+            if (sequence.length === 0) return;
+            exportTextArea.value = getTableExport();
+            exportModal.classList.remove('hidden');
+        };
+
+        document.getElementById('exp-tab-btn').onclick = () => {
+            exportTextArea.value = getTableExport();
+            document.getElementById('exp-tab-btn').classList.replace('bg-slate-700', 'bg-sky-500');
+            document.getElementById('exp-biab-btn').classList.replace('bg-sky-500', 'bg-slate-700');
+        };
+
+        document.getElementById('exp-biab-btn').onclick = () => {
+            exportTextArea.value = getBIABExport();
+            document.getElementById('exp-biab-btn').classList.replace('bg-slate-700', 'bg-sky-500');
+            document.getElementById('exp-tab-btn').classList.replace('bg-sky-500', 'bg-slate-700');
+        };
+
+        document.getElementById('close-modal').onclick = () => exportModal.classList.add('hidden');
+        document.getElementById('copy-btn').onclick = () => {
+            exportTextArea.select();
+            document.execCommand('copy');
+            statusText.innerText = "Copiado!";
+            setTimeout(() => statusText.innerText = "Pronto", 1500);
+        };
+
+        // --- PLAYBACK ---
         function play() {
             if (!sequence.length || isPlaying) return;
             isPlaying = true;
