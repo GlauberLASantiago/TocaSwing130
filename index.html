@@ -270,7 +270,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.6 | XML Precision Fix</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.7 | Final XML Precision</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -327,14 +327,11 @@
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 masterGain = audioCtx.createGain();
                 masterGain.connect(audioCtx.destination);
-                
                 reverbNode = audioCtx.createConvolver();
                 reverbGain = audioCtx.createGain();
                 reverbNode.buffer = createImpulse(2.0, 1.8); 
-                
                 reverbNode.connect(reverbGain);
                 reverbGain.connect(masterGain);
-                
                 updateReverbLevel(document.getElementById('reverb-slider').value);
             }
             if (audioCtx.state === 'suspended') await audioCtx.resume();
@@ -552,6 +549,7 @@
             });
         }
 
+        // --- EXPORTAR XML (CORREÇÃO FINAL DE PRECISÃO) ---
         function getXmlExport() {
             const workTitle = workTitleInput.value.trim() || "Swing Harmony";
             const author = authorNameInput.value.trim() || "Aluno";
@@ -566,19 +564,20 @@
             sequence.forEach((item, i) => {
                 const match = item.label.match(/^([A-G][#b]?)(.*)$/);
                 if (!match) return;
-                let root = match[1], type = match[2];
-                let step = root.charAt(0).toUpperCase(), alter = root.includes("#") ? "1" : (root.includes("b") ? "-1" : "0");
+                let rootStr = match[1], type = match[2];
+                let step = rootStr.charAt(0).toUpperCase(), alter = rootStr.includes("#") ? "1" : (rootStr.includes("b") ? "-1" : "0");
                 
-                let kind = "major", kindText = type;
+                let kind = "major", kindText = type, degrees = "";
 
-                // Mapeamento MusicXML de precisão corrigido (removido tags degree que forçavam simplificação no MuseScore)
                 if (type === "maj7") {
                     kind = "major-seventh";
                 } else if (type === "9") {
                     kind = "dominant-ninth";
                 } else if (type === "7(b9)") {
-                    kind = "dominant";
-                    kindText = "7(b9)";
+                    kind = "dominant-seventh"; // Tipo base 7
+                    kindText = "7(b9)"; // Texto forçado com parênteses
+                    // XML Degree para forçar a visualização técnica se o texto for ignorado
+                    degrees = `<degree><degree-value>9</degree-value><degree-alter>-1</degree-alter><degree-type>add</degree-type></degree>`;
                 } else if (type === "m7(b5)") {
                     kind = "half-diminished";
                     kindText = "m7(b5)";
@@ -603,6 +602,7 @@
           ${alter !== "0" ? `<root-alter>${alter}</root-alter>` : ""}
         </root>
         <kind text="${kindText}">${kind}</kind>
+        ${degrees}
       </harmony>
       <note><rest/><duration>4</duration><type>whole</type></note>
     </measure>`;
