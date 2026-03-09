@@ -265,7 +265,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.4 | XML Harmony Fix</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.5 | MusicXML Degree Fix</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -550,22 +550,59 @@
         function getXmlExport() {
             const workTitle = workTitleInput.value.trim() || "Swing Harmony";
             const author = authorNameInput.value.trim() || "Aluno";
-            let xml = `<?xml version="1.0" encoding="UTF-8"?><score-partwise version="3.1"><work><work-title>${workTitle}</work-title></work><identification><creator type="composer">${author}</creator></identification><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list><part id="P1">`;
+            let xml = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <work><work-title>${workTitle}</work-title></work>
+  <identification><creator type="composer">${author}</creator></identification>
+  <part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+  <part id="P1">`;
+
             sequence.forEach((item, i) => {
                 const match = item.label.match(/^([A-G][#b]?)(.*)$/);
-                let root = match ? match[1] : "C", type = match ? match[2] : "";
-                let step = root.charAt(0).toUpperCase(), alter = root.includes("#")?"1":(root.includes("b")?"-1":"0");
+                if (!match) return;
+                let root = match[1], type = match[2];
+                let step = root.charAt(0).toUpperCase(), alter = root.includes("#") ? "1" : (root.includes("b") ? "-1" : "0");
                 
-                // Mapeamento XML de alta precisão
-                let kind = "major", kindText = type;
-                if (type === "maj7") kind = "major-seventh";
-                else if (type === "9") kind = "dominant-ninth";
-                else if (type === "7(b9)" || type === "7b9") { kind = "dominant"; kindText = "7(b9)"; }
-                else if (type === "m7b5" || type === "m7(b5)") { kind = "half-diminished"; kindText = "m7(b5)"; }
-                else if (type === "m7") kind = "minor-seventh";
-                else if (type === "dim7") kind = "diminished-seventh";
+                let kind = "major", kindText = type, degrees = "";
 
-                xml += `<measure number="${i+1}">${i===0?`<attributes><divisions>1</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>` : ""}<harmony><root><root-step>${step}</root-step>${alter!=="0"?`<root-alter>${alter}</root-alter>` : ""}</root><kind text="${kindText}">${kind}</kind></harmony><note><rest/><duration>4</duration><type>whole</type></note></measure>`;
+                if (type === "maj7") {
+                    kind = "major-seventh";
+                } else if (type === "9") {
+                    kind = "dominant-ninth";
+                } else if (type === "7(b9)") {
+                    kind = "dominant";
+                    kindText = "7(b9)";
+                    // Adiciona explicitamente o b9 via tag degree para garantir que o MuseScore o mostre
+                    degrees = `<degree><degree-value>9</degree-value><degree-alter>-1</degree-alter><degree-type>add</degree-type></degree>`;
+                } else if (type === "m7(b5)") {
+                    kind = "half-diminished";
+                    kindText = "m7(b5)";
+                } else if (type === "m7") {
+                    kind = "minor-seventh";
+                } else if (type === "dim7") {
+                    kind = "diminished-seventh";
+                }
+
+                xml += `
+    <measure number="${i+1}">
+      ${i === 0 ? `
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>` : ""}
+      <harmony>
+        <root>
+          <root-step>${step}</root-step>
+          ${alter !== "0" ? `<root-alter>${alter}</root-alter>` : ""}
+        </root>
+        <kind text="${kindText}">${kind}</kind>
+        ${degrees}
+      </harmony>
+      <note><rest/><duration>4</duration><type>whole</type></note>
+    </measure>`;
             });
             return xml + `</part></score-partwise>`;
         }
