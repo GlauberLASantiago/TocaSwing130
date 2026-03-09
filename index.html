@@ -590,15 +590,21 @@
                 let rootStr = match[1], type = match[2];
                 let step = rootStr.charAt(0).toUpperCase(), alter = rootStr.includes("#") ? "1" : (rootStr.includes("b") ? "-1" : "0");
                 let kind = "major", kindText = type;
+                let degreeXml = ""; // Variável nova para armazenar extensões ou graus modificados
 
                 if (type === "maj7") kind = "major-seventh";
                 else if (type === "9") kind = "dominant-ninth";
-                else if (type === "7(b9)") { kind = "dominant"; kindText = "7(b9)"; }
+                else if (type === "7(b9)") { 
+                    kind = "dominant"; 
+                    kindText = "7(b9)";
+                    // Adicionando a estrutura de nona menor (b9) ao XML para softwares de notação
+                    degreeXml = `<degree><degree-value>9</degree-value><degree-alter>-1</degree-alter><degree-type text="b9">add</degree-type></degree>`;
+                }
                 else if (type === "m7(b5)") { kind = "half-diminished"; kindText = "m7(b5)"; }
                 else if (type === "m7") kind = "minor-seventh";
                 else if (type === "dim7") kind = "diminished-seventh";
 
-                xml += `<measure number="${i+1}">${i === 0 ? `<attributes><divisions>1</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>` : ""}<harmony><root><root-step>${step}</root-step>${alter !== "0" ? `<root-alter>${alter}</root-alter>` : ""}</root><kind text="${kindText}">${kind}</kind></harmony><note><rest/><duration>4</duration><type>whole</type></note></measure>`;
+                xml += `<measure number="${i+1}">${i === 0 ? `<attributes><divisions>1</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>` : ""}<harmony><root><root-step>${step}</root-step>${alter !== "0" ? `<root-alter>${alter}</root-alter>` : ""}</root><kind text="${kindText}">${kind}</kind>${degreeXml}</harmony><note><rest/><duration>4</duration><type>whole</type></note></measure>`;
             });
             return xml + `</part></score-partwise>`;
         }
