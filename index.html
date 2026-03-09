@@ -33,10 +33,12 @@
             color: #f1f5f9;
             border-color: #334155;
         }
+        /* Corrigido: Feedback visual de hover no modo escuro */
         .dark .chord-btn:hover {
-            background-color: #0ea5e9;
-            color: white;
-            border-color: #38bdf8;
+            background-color: #334155;
+            color: #0ea5e9;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 10px rgba(14, 165, 233, 0.2);
             transform: translateY(-1px);
         }
         .dark .note-label {
@@ -121,6 +123,7 @@
             background-color: rgba(245, 158, 11, 0.05) !important;
         }
 
+        /* --- DESTAQUES DE CAMPO HARMÓNICO --- */
         .chord-btn.highlight-major {
             background-color: #3b82f6 !important;
             color: white !important;
@@ -135,6 +138,12 @@
 
         .chord-btn.highlight-major.highlight-minor {
             background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%) !important;
+        }
+
+        .chord-btn.highlight-major:hover,
+        .chord-btn.highlight-minor:hover {
+            filter: brightness(1.15);
+            box-shadow: 0 0 8px rgba(255,255,255,0.3);
         }
 
         input[type=range] {
@@ -156,7 +165,7 @@
             min-height: 24px;
         }
 
-        .chord-btn { font-size: 9px; padding: 2px 1px; height: 22px; }
+        .chord-btn { font-size: 9px; padding: 2px 1px; height: 22px; cursor: pointer; border-radius: 4px; border: 1px solid transparent; }
         .note-label { font-size: 10px; padding: 2px; height: 22px; font-weight: bold; }
 
         .options-overlay {
@@ -270,7 +279,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.7 | Final XML Precision</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.8 | Reverb Control Fix</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -327,18 +336,23 @@
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 masterGain = audioCtx.createGain();
                 masterGain.connect(audioCtx.destination);
+                
                 reverbNode = audioCtx.createConvolver();
                 reverbGain = audioCtx.createGain();
-                reverbNode.buffer = createImpulse(2.0, 1.8); 
+                reverbNode.buffer = createImpulse(2.2, 2.0); 
+                
                 reverbNode.connect(reverbGain);
                 reverbGain.connect(masterGain);
-                updateReverbLevel(document.getElementById('reverb-slider').value);
+                
+                // Inicializa o nível de reverb com base no valor atual do slider
+                const sliderVal = document.getElementById('reverb-slider').value;
+                updateReverbLevel(sliderVal);
             }
             if (audioCtx.state === 'suspended') await audioCtx.resume();
         }
 
         function createImpulse(duration, decay) {
-            const sampleRate = audioCtx.sampleRate;
+            const sampleRate = audioCtx ? audioCtx.sampleRate : 44100;
             const length = sampleRate * duration;
             const buffer = audioCtx.createBuffer(2, length, sampleRate);
             for (let channel = 0; channel < 2; channel++) {
@@ -351,7 +365,11 @@
         }
 
         function updateReverbLevel(val) {
-            if (reverbGain) reverbGain.gain.setTargetAtTime(val / 80, audioCtx.currentTime, 0.05);
+            if (reverbGain && audioCtx) {
+                // Escala de ganho para o reverb ser bem percetível (0 a 1.25)
+                const gainValue = parseFloat(val) / 80;
+                reverbGain.gain.setTargetAtTime(gainValue, audioCtx.currentTime, 0.05);
+            }
         }
 
         async function loadSound(url) {
@@ -478,16 +496,18 @@
             const buffer = await loadSound(file);
             if (!buffer) return;
             const source = audioCtx.createBufferSource();
-            const gain = audioCtx.createGain();
+            const gainNode = audioCtx.createGain();
             source.buffer = buffer;
             const now = audioCtx.currentTime;
-            gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(1, now + 0.01);
-            gain.gain.setValueAtTime(1, now + 1.2);
-            gain.gain.linearRampToValueAtTime(0, now + 1.5);
-            source.connect(gain);
-            gain.connect(masterGain);
-            if (reverbNode) gain.connect(reverbNode);
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(1, now + 0.01);
+            gainNode.gain.setValueAtTime(1, now + 1.2);
+            gainNode.gain.linearRampToValueAtTime(0, now + 1.5);
+            
+            source.connect(gainNode);
+            gainNode.connect(masterGain);
+            if (reverbNode) gainNode.connect(reverbNode);
+            
             source.start(now);
             source.stop(now + 1.5);
         }
@@ -513,6 +533,12 @@
         document.getElementById('toggle-minor-field').onclick = () => { isMinorFieldActive = !isMinorFieldActive; updateUIState(); };
         document.getElementById('toggle-degree-view').onclick = () => { isDegreeViewActive = !isDegreeViewActive; updateUIState(); };
         document.getElementById('toggle-autoplay-mode').onclick = () => { isAutoplayActive = !isAutoplayActive; updateUIState(); };
+
+        document.getElementById('reverb-slider').oninput = (e) => {
+            const val = e.target.value;
+            document.getElementById('reverb-val').innerText = val;
+            updateReverbLevel(val);
+        };
 
         async function addOrReplaceChord(label, file) {
             if (isPlaying) return;
@@ -549,7 +575,6 @@
             });
         }
 
-        // --- EXPORTAR XML (CORREÇÃO FINAL DE PRECISÃO) ---
         function getXmlExport() {
             const workTitle = workTitleInput.value.trim() || "Swing Harmony";
             const author = authorNameInput.value.trim() || "Aluno";
@@ -566,46 +591,16 @@
                 if (!match) return;
                 let rootStr = match[1], type = match[2];
                 let step = rootStr.charAt(0).toUpperCase(), alter = rootStr.includes("#") ? "1" : (rootStr.includes("b") ? "-1" : "0");
-                
                 let kind = "major", kindText = type, degrees = "";
 
-                if (type === "maj7") {
-                    kind = "major-seventh";
-                } else if (type === "9") {
-                    kind = "dominant-ninth";
-                } else if (type === "7(b9)") {
-                    kind = "dominant-seventh"; // Tipo base 7
-                    kindText = "7(b9)"; // Texto forçado com parênteses
-                    // XML Degree para forçar a visualização técnica se o texto for ignorado
-                    degrees = `<degree><degree-value>9</degree-value><degree-alter>-1</degree-alter><degree-type>add</degree-type></degree>`;
-                } else if (type === "m7(b5)") {
-                    kind = "half-diminished";
-                    kindText = "m7(b5)";
-                } else if (type === "m7") {
-                    kind = "minor-seventh";
-                } else if (type === "dim7") {
-                    kind = "diminished-seventh";
-                }
+                if (type === "maj7") kind = "major-seventh";
+                else if (type === "9") kind = "dominant-ninth";
+                else if (type === "7(b9)") { kind = "dominant-seventh"; kindText = "7(b9)"; degrees = `<degree><degree-value>9</degree-value><degree-alter>-1</degree-alter><degree-type>add</degree-type></degree>`; }
+                else if (type === "m7(b5)") { kind = "half-diminished"; kindText = "m7(b5)"; }
+                else if (type === "m7") kind = "minor-seventh";
+                else if (type === "dim7") kind = "diminished-seventh";
 
-                xml += `
-    <measure number="${i+1}">
-      ${i === 0 ? `
-      <attributes>
-        <divisions>1</divisions>
-        <key><fifths>0</fifths></key>
-        <time><beats>4</beats><beat-type>4</beat-type></time>
-        <clef><sign>G</sign><line>2</line></clef>
-      </attributes>` : ""}
-      <harmony>
-        <root>
-          <root-step>${step}</root-step>
-          ${alter !== "0" ? `<root-alter>${alter}</root-alter>` : ""}
-        </root>
-        <kind text="${kindText}">${kind}</kind>
-        ${degrees}
-      </harmony>
-      <note><rest/><duration>4</duration><type>whole</type></note>
-    </measure>`;
+                xml += `<measure number="${i+1}">${i === 0 ? `<attributes><divisions>1</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>` : ""}<harmony><root><root-step>${step}</root-step>${alter !== "0" ? `<root-alter>${alter}</root-alter>` : ""}</root><kind text="${kindText}">${kind}</kind>${degrees}</harmony><note><rest/><duration>4</duration><type>whole</type></note></measure>`;
             });
             return xml + `</part></score-partwise>`;
         }
@@ -627,7 +622,6 @@
             exportCanvas.classList.remove('hidden');
         }
 
-        // --- HANDLERS ---
         document.getElementById('export-btn').onclick = () => { exportModal.classList.remove('hidden'); showExportView('data'); };
         document.getElementById('exp-img-btn').onclick = () => showExportView('img');
         document.getElementById('exp-mus-btn').onclick = () => showExportView('mus');
@@ -726,6 +720,15 @@
         }
 
         function toggleUI(p) { playBtn.classList.toggle('hidden', p); stopBtn.classList.toggle('hidden', !p); statusText.innerText = p ? "TOCANDO" : "PRONTO"; }
+
+        document.getElementById('theme-toggle').onclick = () => {
+            document.body.classList.toggle('dark');
+            document.body.classList.toggle('light');
+            const isDark = document.body.classList.contains('dark');
+            document.getElementById('theme-icon').innerHTML = isDark 
+                ? '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'
+                : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+        };
 
         playBtn.onclick = play; stopBtn.onclick = stop;
         document.getElementById('clear-btn').onclick = () => { if(!isPlaying) { sequence=[]; editingIndex=null; menuActiveIndex=null; renderSequence(); }};
