@@ -33,12 +33,12 @@
             color: #f1f5f9;
             border-color: #334155;
         }
-        /* Corrigido: Feedback visual de hover no modo escuro */
+        /* Efeito de hover no modo escuro */
         .dark .chord-btn:hover {
             background-color: #334155;
             color: #0ea5e9;
             border-color: #0ea5e9;
-            box-shadow: 0 0 10px rgba(14, 165, 233, 0.2);
+            box-shadow: 0 0 12px rgba(14, 165, 233, 0.2);
             transform: translateY(-1px);
         }
         .dark .note-label {
@@ -140,12 +140,6 @@
             background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%) !important;
         }
 
-        .chord-btn.highlight-major:hover,
-        .chord-btn.highlight-minor:hover {
-            filter: brightness(1.15);
-            box-shadow: 0 0 8px rgba(255,255,255,0.3);
-        }
-
         input[type=range] {
             accent-color: #0ea5e9;
         }
@@ -200,7 +194,6 @@
             </div>
             
             <div class="flex flex-wrap items-center gap-2 card p-2 rounded-xl border">
-                <!-- Controle de Reverb -->
                 <div class="flex items-center gap-2 px-2 border-r border-slate-700/30 pr-3">
                     <label class="text-[8px] uppercase opacity-50 font-bold">Reverb</label>
                     <input type="range" id="reverb-slider" min="0" max="100" value="25" class="w-20 h-1 rounded-lg appearance-none cursor-pointer">
@@ -254,6 +247,7 @@
                 </div>
             </section>
 
+            <!-- Auxiliares Harmónicos -->
             <section class="flex flex-wrap gap-4 mt-4 mb-2 justify-center">
                 <button id="toggle-major-field" class="px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-blue-500">
                     Campo harmónico diatónico maior de dó
@@ -279,7 +273,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.8 | Reverb Control Fix</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.9 | Audio & XML Fix</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -339,14 +333,14 @@
                 
                 reverbNode = audioCtx.createConvolver();
                 reverbGain = audioCtx.createGain();
-                reverbNode.buffer = createImpulse(2.2, 2.0); 
+                
+                // Cria impulso com fade-in microscópico para evitar sensação de duplicidade
+                reverbNode.buffer = createImpulse(2.0, 1.8); 
                 
                 reverbNode.connect(reverbGain);
                 reverbGain.connect(masterGain);
                 
-                // Inicializa o nível de reverb com base no valor atual do slider
-                const sliderVal = document.getElementById('reverb-slider').value;
-                updateReverbLevel(sliderVal);
+                updateReverbLevel(document.getElementById('reverb-slider').value);
             }
             if (audioCtx.state === 'suspended') await audioCtx.resume();
         }
@@ -358,7 +352,9 @@
             for (let channel = 0; channel < 2; channel++) {
                 const data = buffer.getChannelData(channel);
                 for (let i = 0; i < length; i++) {
-                    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+                    // Fade-in inicial de 5ms para evitar o "clique" ou duplicidade do ataque
+                    const fadeIn = i < (sampleRate * 0.005) ? i / (sampleRate * 0.005) : 1;
+                    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay) * fadeIn;
                 }
             }
             return buffer;
@@ -366,8 +362,7 @@
 
         function updateReverbLevel(val) {
             if (reverbGain && audioCtx) {
-                // Escala de ganho para o reverb ser bem percetível (0 a 1.25)
-                const gainValue = parseFloat(val) / 80;
+                const gainValue = parseFloat(val) / 100;
                 reverbGain.gain.setTargetAtTime(gainValue, audioCtx.currentTime, 0.05);
             }
         }
@@ -381,7 +376,7 @@
                 audioBuffers.set(url, buffer);
                 return buffer;
             } catch (e) {
-                console.error("Erro som:", url);
+                console.error("Erro áudio:", url);
                 return null;
             }
         }
@@ -455,30 +450,30 @@
 
                 types.forEach(type => {
                     const cell = document.createElement('div');
+                    const fullLabel = (note.display.includes('/') ? note.display.split('/')[0] : note.display) + type.label;
+                    const fileName = `swing130_${note.file}${type.suffix}.mp3`;
+                    
                     if (note.display.includes('/')) {
                         const parts = note.display.split('/');
                         cell.className = 'flex gap-0.5 h-[22px]';
                         parts.forEach(p => {
                             const btn = document.createElement('button');
-                            const fullLabel = p + type.label;
+                            const label = p + type.label;
                             btn.className = 'chord-btn rounded font-semibold border-b shadow-sm transition-all flex-1 text-[7px] p-0';
-                            btn.dataset.chord = fullLabel;
-                            btn.innerText = getDisplayLabel(fullLabel);
-                            const fileName = `swing130_${note.file}${type.suffix}.mp3`;
+                            btn.dataset.chord = label;
+                            btn.innerText = getDisplayLabel(label);
                             btn.onclick = async () => { 
                                 await initAudioContext(); 
                                 if (isAutoplayActive) playPreview(fileName);
-                                addOrReplaceChord(fullLabel, fileName); 
+                                addOrReplaceChord(label, fileName); 
                             };
                             cell.appendChild(btn);
                         });
                     } else {
                         const btn = document.createElement('button');
-                        const fullLabel = note.display + type.label;
                         btn.className = 'chord-btn rounded font-semibold border-b shadow-sm transition-all w-full';
                         btn.dataset.chord = fullLabel;
                         btn.innerText = getDisplayLabel(fullLabel);
-                        const fileName = `swing130_${note.file}${type.suffix}.mp3`;
                         btn.onclick = async () => { 
                             await initAudioContext(); 
                             if (isAutoplayActive) playPreview(fileName);
@@ -499,8 +494,10 @@
             const gainNode = audioCtx.createGain();
             source.buffer = buffer;
             const now = audioCtx.currentTime;
+            
+            // Envelope suave para evitar duplicidade percebida
             gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(1, now + 0.01);
+            gainNode.gain.linearRampToValueAtTime(1, now + 0.02);
             gainNode.gain.setValueAtTime(1, now + 1.2);
             gainNode.gain.linearRampToValueAtTime(0, now + 1.5);
             
@@ -575,6 +572,7 @@
             });
         }
 
+        // --- EXPORTAR XML (PRECISÃO TOTAL) ---
         function getXmlExport() {
             const workTitle = workTitleInput.value.trim() || "Swing Harmony";
             const author = authorNameInput.value.trim() || "Aluno";
@@ -591,16 +589,16 @@
                 if (!match) return;
                 let rootStr = match[1], type = match[2];
                 let step = rootStr.charAt(0).toUpperCase(), alter = rootStr.includes("#") ? "1" : (rootStr.includes("b") ? "-1" : "0");
-                let kind = "major", kindText = type, degrees = "";
+                let kind = "major", kindText = type;
 
                 if (type === "maj7") kind = "major-seventh";
                 else if (type === "9") kind = "dominant-ninth";
-                else if (type === "7(b9)") { kind = "dominant-seventh"; kindText = "7(b9)"; degrees = `<degree><degree-value>9</degree-value><degree-alter>-1</degree-alter><degree-type>add</degree-type></degree>`; }
+                else if (type === "7(b9)") { kind = "dominant"; kindText = "7(b9)"; }
                 else if (type === "m7(b5)") { kind = "half-diminished"; kindText = "m7(b5)"; }
                 else if (type === "m7") kind = "minor-seventh";
                 else if (type === "dim7") kind = "diminished-seventh";
 
-                xml += `<measure number="${i+1}">${i === 0 ? `<attributes><divisions>1</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>` : ""}<harmony><root><root-step>${step}</root-step>${alter !== "0" ? `<root-alter>${alter}</root-alter>` : ""}</root><kind text="${kindText}">${kind}</kind>${degrees}</harmony><note><rest/><duration>4</duration><type>whole</type></note></measure>`;
+                xml += `<measure number="${i+1}">${i === 0 ? `<attributes><divisions>1</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>` : ""}<harmony><root><root-step>${step}</root-step>${alter !== "0" ? `<root-alter>${alter}</root-alter>` : ""}</root><kind text="${kindText}">${kind}</kind></harmony><note><rest/><duration>4</duration><type>whole</type></note></measure>`;
             });
             return xml + `</part></score-partwise>`;
         }
@@ -699,10 +697,19 @@
             const now = audioCtx.currentTime, start = now + 0.15;
             sequence.forEach((item, i) => {
                 const time = start + (i * MEASURE_DURATION), stopT = time + MEASURE_DURATION + 0.1; 
-                const source = audioCtx.createBufferSource(); const gain = audioCtx.createGain();
+                const source = audioCtx.createBufferSource(); 
+                const gain = audioCtx.createGain();
                 source.buffer = item.buffer;
-                gain.gain.setValueAtTime(0, time); gain.gain.linearRampToValueAtTime(1, time + 0.01); gain.gain.setValueAtTime(1, time + MEASURE_DURATION - 0.05); gain.gain.linearRampToValueAtTime(0, stopT);
-                source.connect(gain); gain.connect(masterGain); if (reverbNode) gain.connect(reverbNode);
+                
+                gain.gain.setValueAtTime(0, time); 
+                gain.gain.linearRampToValueAtTime(1, time + 0.02); 
+                gain.gain.setValueAtTime(1, time + MEASURE_DURATION - 0.05); 
+                gain.gain.linearRampToValueAtTime(0, stopT);
+                
+                source.connect(gain); 
+                gain.connect(masterGain); 
+                if (reverbNode) gain.connect(reverbNode);
+                
                 source.start(time); source.stop(stopT); activeNodes.push({source, gain});
                 visualTimers.push(setTimeout(() => highlight(i), (time - now) * 1000));
             });
