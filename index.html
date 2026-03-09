@@ -172,6 +172,10 @@
             z-index: 20;
         }
         .options-overlay button { font-size: 7px; font-weight: bold; padding: 0 4px; height: 18px; border-radius: 2px; }
+
+        #export-modal {
+            transition: opacity 0.3s ease;
+        }
     </style>
 </head>
 <body class="dark p-1 md:p-4">
@@ -187,6 +191,7 @@
             </div>
             
             <div class="flex flex-wrap items-center gap-2 card p-2 rounded-xl border">
+                <!-- Controle de Reverb -->
                 <div class="flex items-center gap-2 px-2 border-r border-slate-700/30 pr-3">
                     <label class="text-[8px] uppercase opacity-50 font-bold">Reverb</label>
                     <input type="range" id="reverb-slider" min="0" max="100" value="25" class="w-20 h-1 rounded-lg appearance-none cursor-pointer">
@@ -265,7 +270,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.5 | MusicXML Degree Fix</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.6 | XML Precision Fix</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -564,8 +569,9 @@
                 let root = match[1], type = match[2];
                 let step = root.charAt(0).toUpperCase(), alter = root.includes("#") ? "1" : (root.includes("b") ? "-1" : "0");
                 
-                let kind = "major", kindText = type, degrees = "";
+                let kind = "major", kindText = type;
 
+                // Mapeamento MusicXML de precisão corrigido (removido tags degree que forçavam simplificação no MuseScore)
                 if (type === "maj7") {
                     kind = "major-seventh";
                 } else if (type === "9") {
@@ -573,8 +579,6 @@
                 } else if (type === "7(b9)") {
                     kind = "dominant";
                     kindText = "7(b9)";
-                    // Adiciona explicitamente o b9 via tag degree para garantir que o MuseScore o mostre
-                    degrees = `<degree><degree-value>9</degree-value><degree-alter>-1</degree-alter><degree-type>add</degree-type></degree>`;
                 } else if (type === "m7(b5)") {
                     kind = "half-diminished";
                     kindText = "m7(b5)";
@@ -599,7 +603,6 @@
           ${alter !== "0" ? `<root-alter>${alter}</root-alter>` : ""}
         </root>
         <kind text="${kindText}">${kind}</kind>
-        ${degrees}
       </harmony>
       <note><rest/><duration>4</duration><type>whole</type></note>
     </measure>`;
