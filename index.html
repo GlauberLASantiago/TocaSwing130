@@ -90,7 +90,7 @@
             border-color: #A39D95;
         }
 
-        /* --- ESTRUTURA DA GRADE --- */
+        /* --- ESTRUTURA --- */
         .chord-grid {
             display: grid;
             grid-template-columns: 70px repeat(6, 1fr);
@@ -121,7 +121,6 @@
             background-color: rgba(245, 158, 11, 0.05) !important;
         }
 
-        /* --- DESTAQUES DE CAMPO HARMÓNICO --- */
         .chord-btn.highlight-major {
             background-color: #3b82f6 !important;
             color: white !important;
@@ -138,26 +137,13 @@
             background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%) !important;
         }
 
-        .chord-btn.highlight-major:hover,
-        .chord-btn.highlight-minor:hover {
-            filter: brightness(1.15);
-            box-shadow: 0 0 8px rgba(255,255,255,0.3);
-        }
-
         input[type=range] {
             accent-color: #0ea5e9;
         }
 
-        ::-webkit-scrollbar {
-            width: 5px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #94a3b8;
-            border-radius: 3px;
-        }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
 
         .column-header {
             font-size: 8px;
@@ -170,18 +156,8 @@
             min-height: 24px;
         }
 
-        .chord-btn {
-            font-size: 9px;
-            padding: 2px 1px;
-            height: 22px;
-        }
-
-        .note-label {
-            font-size: 10px;
-            padding: 2px;
-            height: 22px;
-            font-weight: bold;
-        }
+        .chord-btn { font-size: 9px; padding: 2px 1px; height: 22px; }
+        .note-label { font-size: 10px; padding: 2px; height: 22px; font-weight: bold; }
 
         .options-overlay {
             position: absolute;
@@ -194,19 +170,8 @@
             gap: 2px;
             padding: 1px;
             z-index: 20;
-            border-radius: inherit;
         }
-        .options-overlay button {
-            font-size: 7px;
-            font-weight: bold;
-            padding: 0 4px;
-            height: 18px;
-            border-radius: 2px;
-        }
-
-        #export-modal {
-            transition: opacity 0.3s ease;
-        }
+        .options-overlay button { font-size: 7px; font-weight: bold; padding: 0 4px; height: 18px; border-radius: 2px; }
     </style>
 </head>
 <body class="dark p-1 md:p-4">
@@ -275,7 +240,6 @@
                 </div>
             </section>
 
-            <!-- Auxiliares Harmónicos -->
             <section class="flex flex-wrap gap-4 mt-4 mb-2 justify-center">
                 <button id="toggle-major-field" class="px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-blue-500">
                     Campo harmónico diatónico maior de dó
@@ -286,7 +250,6 @@
                 <button id="toggle-degree-view" class="px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-sky-500">
                     Visualização em cifragem por graus, em dó
                 </button>
-                <!-- Novo: Botão de Autoplay Mode -->
                 <button id="toggle-autoplay-mode" class="px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-amber-500">
                     Modo Preview (Autoplay)
                 </button>
@@ -302,7 +265,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.2 | Autoplay Mode</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.3 | XML Export Fix</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -359,14 +322,11 @@
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 masterGain = audioCtx.createGain();
                 masterGain.connect(audioCtx.destination);
-                
                 reverbNode = audioCtx.createConvolver();
                 reverbGain = audioCtx.createGain();
                 reverbNode.buffer = createImpulse(2.0, 1.8); 
-                
                 reverbNode.connect(reverbGain);
                 reverbGain.connect(masterGain);
-                
                 updateReverbLevel(document.getElementById('reverb-slider').value);
             }
             if (audioCtx.state === 'suspended') await audioCtx.resume();
@@ -398,34 +358,22 @@
                 audioBuffers.set(url, buffer);
                 return buffer;
             } catch (e) {
-                console.error("Erro áudio:", url);
+                console.error("Erro som:", url);
                 return null;
             }
         }
 
         // --- DADOS MUSICAIS ---
         const noteData = [
-            { display: 'B', file: 'b' },
-            { display: 'A#/Bb', file: 'as' },
-            { display: 'A', file: 'a' },
-            { display: 'G#/Ab', file: 'gs' },
-            { display: 'G', file: 'g' },
-            { display: 'F#/Gb', file: 'fs' },
-            { display: 'F', file: 'f' },
-            { display: 'E', file: 'e' },
-            { display: 'D#/Eb', file: 'ds' },
-            { display: 'D', file: 'd' },
-            { display: 'C#/Db', file: 'cs' },
-            { display: 'C', file: 'c' }
+            { display: 'B', file: 'b' }, { display: 'A#/Bb', file: 'as' }, { display: 'A', file: 'a' },
+            { display: 'G#/Ab', file: 'gs' }, { display: 'G', file: 'g' }, { display: 'F#/Gb', file: 'fs' },
+            { display: 'F', file: 'f' }, { display: 'E', file: 'e' }, { display: 'D#/Eb', file: 'ds' },
+            { display: 'D', file: 'd' }, { display: 'C#/Db', file: 'cs' }, { display: 'C', file: 'c' }
         ];
 
         const types = [
-            { suffix: 'maj7', label: 'maj7' },
-            { suffix: '9', label: '9' },
-            { suffix: '7b9', label: '7(b9)' },
-            { suffix: 'm7', label: 'm7' },
-            { suffix: 'm7b5', label: 'm7(b5)' },
-            { suffix: 'dim7', label: 'dim7' }
+            { suffix: 'maj7', label: 'maj7' }, { suffix: '9', label: '9' }, { suffix: '7b9', label: '7(b9)' },
+            { suffix: 'm7', label: 'm7' }, { suffix: 'm7b5', label: 'm7(b5)' }, { suffix: 'dim7', label: 'dim7' }
         ];
 
         const degreeMap = {
@@ -464,10 +412,8 @@
             if (!isDegreeViewActive) return chordLabel;
             const match = chordLabel.match(/^([A-Ga-g][#b]?)(.*)$/);
             if (!match) return chordLabel;
-            const root = match[1];
-            const type = match[2];
-            const degree = degreeMap[root] || root;
-            return degree + type;
+            const root = match[1], type = match[2];
+            return (degreeMap[root] || root) + type;
         }
 
         function getSanitizedFilename(extension) {
@@ -476,7 +422,6 @@
             return `${sanitized}.${extension}`;
         }
 
-        // --- GESTÃO DA GRADE ---
         function generateGrid() {
             gridContainer.innerHTML = '';
             noteData.forEach(note => {
@@ -499,7 +444,7 @@
                             const fileName = `swing130_${note.file}${type.suffix}.mp3`;
                             btn.onclick = async () => { 
                                 await initAudioContext(); 
-                                if (isAutoplayActive) playPreview(fullLabel, fileName);
+                                if (isAutoplayActive) playPreview(fileName);
                                 addOrReplaceChord(fullLabel, fileName); 
                             };
                             cell.appendChild(btn);
@@ -513,7 +458,7 @@
                         const fileName = `swing130_${note.file}${type.suffix}.mp3`;
                         btn.onclick = async () => { 
                             await initAudioContext(); 
-                            if (isAutoplayActive) playPreview(fullLabel, fileName);
+                            if (isAutoplayActive) playPreview(fileName);
                             addOrReplaceChord(fullLabel, fileName); 
                         };
                         cell.appendChild(btn);
@@ -524,25 +469,20 @@
             updateUIState();
         }
 
-        // Função para tocar uma prévia rápida (Autoplay)
-        async function playPreview(label, file) {
+        async function playPreview(file) {
             const buffer = await loadSound(file);
             if (!buffer) return;
-
             const source = audioCtx.createBufferSource();
             const gain = audioCtx.createGain();
             source.buffer = buffer;
-
             const now = audioCtx.currentTime;
             gain.gain.setValueAtTime(0, now);
             gain.gain.linearRampToValueAtTime(1, now + 0.01);
             gain.gain.setValueAtTime(1, now + 1.2);
             gain.gain.linearRampToValueAtTime(0, now + 1.5);
-
             source.connect(gain);
             gain.connect(masterGain);
             if (reverbNode) gain.connect(reverbNode);
-
             source.start(now);
             source.stop(now + 1.5);
         }
@@ -557,178 +497,93 @@
                 btn.innerText = getDisplayLabel(label);
             });
 
-            const btnMajor = document.getElementById('toggle-major-field');
-            const btnMinor = document.getElementById('toggle-minor-field');
-            const btnDegree = document.getElementById('toggle-degree-view');
-            const btnAutoplay = document.getElementById('toggle-autoplay-mode');
-            
-            btnMajor.className = isMajorFieldActive 
-                ? 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all bg-blue-500 text-white'
-                : 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-blue-500';
-
-            btnMinor.className = isMinorFieldActive 
-                ? 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all bg-emerald-500 text-white'
-                : 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-emerald-500';
-
-            btnDegree.className = isDegreeViewActive 
-                ? 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all bg-sky-500 text-white'
-                : 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-sky-500';
-
-            btnAutoplay.className = isAutoplayActive 
-                ? 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all bg-amber-500 text-white'
-                : 'px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all btn-secondary hover:border-amber-500';
-
+            document.getElementById('toggle-major-field').className = `px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all ${isMajorFieldActive ? 'bg-blue-500 text-white' : 'btn-secondary hover:border-blue-500'}`;
+            document.getElementById('toggle-minor-field').className = `px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all ${isMinorFieldActive ? 'bg-emerald-500 text-white' : 'btn-secondary hover:border-emerald-500'}`;
+            document.getElementById('toggle-degree-view').className = `px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all ${isDegreeViewActive ? 'bg-sky-500 text-white' : 'btn-secondary hover:border-sky-500'}`;
+            document.getElementById('toggle-autoplay-mode').className = `px-4 py-2 rounded-lg border font-bold text-[10px] uppercase transition-all ${isAutoplayActive ? 'bg-amber-500 text-white' : 'btn-secondary hover:border-amber-500'}`;
             renderSequence();
         }
-
-        // --- HANDLERS ---
-        document.getElementById('theme-toggle').onclick = () => {
-            document.body.classList.toggle('dark');
-            document.body.classList.toggle('light');
-            const isDark = document.body.classList.contains('dark');
-            document.getElementById('theme-icon').innerHTML = isDark 
-                ? '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'
-                : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
-        };
 
         document.getElementById('toggle-major-field').onclick = () => { isMajorFieldActive = !isMajorFieldActive; updateUIState(); };
         document.getElementById('toggle-minor-field').onclick = () => { isMinorFieldActive = !isMinorFieldActive; updateUIState(); };
         document.getElementById('toggle-degree-view').onclick = () => { isDegreeViewActive = !isDegreeViewActive; updateUIState(); };
         document.getElementById('toggle-autoplay-mode').onclick = () => { isAutoplayActive = !isAutoplayActive; updateUIState(); };
 
-        document.getElementById('reverb-slider').oninput = (e) => {
-            document.getElementById('reverb-val').innerText = e.target.value;
-            updateReverbLevel(e.target.value);
-        };
-
         async function addOrReplaceChord(label, file) {
             if (isPlaying) return;
             statusText.innerText = "...";
             const buffer = await loadSound(file);
             if (buffer) {
-                if (editingIndex !== null) {
-                    sequence[editingIndex] = { label, buffer, file };
-                    editingIndex = null;
-                } else {
-                    sequence.push({ label, buffer, file });
-                }
+                if (editingIndex !== null) { sequence[editingIndex] = { label, buffer, file }; editingIndex = null; }
+                else { sequence.push({ label, buffer, file }); }
                 statusText.innerText = "OK";
                 renderSequence();
-            } else {
-                statusText.innerText = "ERRO";
-            }
+            } else { statusText.innerText = "ERRO"; }
         }
 
         function renderSequence() {
             sequenceList.innerHTML = '';
-            if (sequence.length === 0) {
-                sequenceList.innerHTML = '<p class="col-span-8 opacity-40 text-[9px] text-center py-6 italic uppercase tracking-widest">Selecione acordes abaixo (8 por linha)</p>';
-                return;
-            }
+            if (sequence.length === 0) { sequenceList.innerHTML = '<p class="col-span-8 opacity-40 text-[9px] text-center py-6 italic uppercase tracking-widest">Selecione acordes abaixo (8 por linha)</p>'; return; }
             sequence.forEach((item, i) => {
                 const div = document.createElement('div');
-                const isEditing = (editingIndex === i);
-                const isMenu = (menuActiveIndex === i);
+                const isEditing = (editingIndex === i), isMenu = (menuActiveIndex === i);
                 div.className = `sequence-item card border-r-2 border-r-sky-500 rounded shadow-sm group cursor-pointer transition-all border ${isEditing ? 'editing-highlight' : ''}`;
                 div.id = `m-${i}`;
-                div.innerHTML = `
-                    <span class="absolute top-0 left-0.5 text-[12px] opacity-40 font-mono font-bold leading-none">${i + 1}</span>
-                    <span class="text-[10px] font-bold tracking-tighter leading-none">${getDisplayLabel(item.label)}</span>
-                `;
+                div.innerHTML = `<span class="absolute top-0 left-0.5 text-[12px] opacity-40 font-mono font-bold leading-none">${i + 1}</span><span class="text-[10px] font-bold tracking-tighter leading-none">${getDisplayLabel(item.label)}</span>`;
                 if (isMenu) {
-                    const overlay = document.createElement('div');
-                    overlay.className = 'options-overlay';
-                    overlay.innerHTML = `
-                        <button class="bg-sky-500 hover:bg-sky-400 text-white">SUB</button>
-                        <button class="bg-rose-500 hover:bg-rose-400 text-white">DEL</button>
-                        <button class="bg-slate-600 hover:bg-slate-500 text-white font-mono">X</button>
-                    `;
-                    const [btnReplace, btnDelete, btnCancel] = overlay.querySelectorAll('button');
-                    btnReplace.onclick = (e) => { e.stopPropagation(); editingIndex = i; menuActiveIndex = null; renderSequence(); };
-                    btnDelete.onclick = (e) => { e.stopPropagation(); sequence.splice(i, 1); menuActiveIndex = null; renderSequence(); };
-                    btnCancel.onclick = (e) => { e.stopPropagation(); menuActiveIndex = null; renderSequence(); };
+                    const overlay = document.createElement('div'); overlay.className = 'options-overlay';
+                    overlay.innerHTML = `<button class="bg-sky-500 hover:bg-sky-400 text-white">SUB</button><button class="bg-rose-500 hover:bg-rose-400 text-white">DEL</button><button class="bg-slate-600 hover:bg-slate-500 text-white font-mono">X</button>`;
+                    const [btnR, btnD, btnC] = overlay.querySelectorAll('button');
+                    btnR.onclick = (e) => { e.stopPropagation(); editingIndex = i; menuActiveIndex = null; renderSequence(); };
+                    btnD.onclick = (e) => { e.stopPropagation(); sequence.splice(i, 1); menuActiveIndex = null; renderSequence(); };
+                    btnC.onclick = (e) => { e.stopPropagation(); menuActiveIndex = null; renderSequence(); };
                     div.appendChild(overlay);
                 }
-                div.onclick = () => {
-                    if(!isPlaying) {
-                        if (editingIndex === i) { editingIndex = null; renderSequence(); } 
-                        else { menuActiveIndex = (menuActiveIndex === i) ? null : i; renderSequence(); }
-                    }
-                };
+                div.onclick = () => { if(!isPlaying) { if (editingIndex === i) { editingIndex = null; renderSequence(); } else { menuActiveIndex = (menuActiveIndex === i) ? null : i; renderSequence(); } } };
                 sequenceList.appendChild(div);
             });
         }
 
-        // --- EXPORTAR ---
-        function generateImageExport() {
-            const cols = 8;
-            const rows = Math.ceil(sequence.length / cols);
-            const mWidth = 140;
-            const mHeight = 40;
-            const padding = 20;
-            const workTitle = workTitleInput.value.trim() || "Trabalho Sem Título";
-            const author = authorNameInput.value.trim() || "Anónimo";
-
-            exportCanvas.width = (cols * mWidth) + (padding * 2);
-            exportCanvas.height = (rows * mHeight) + (padding * 2) + 70;
-            const ctx = exportCanvas.getContext('2d');
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-            
-            ctx.fillStyle = '#0ea5e9';
-            ctx.font = 'bold 24px Inter, sans-serif';
-            ctx.fillText(workTitle, padding, padding + 25);
-            ctx.font = '12px Inter, sans-serif';
-            ctx.fillStyle = '#64748b';
-            ctx.fillText(`Autor: ${author}`, padding, padding + 45);
-
+        function getXmlExport() {
+            const workTitle = workTitleInput.value.trim() || "Swing Harmony";
+            const author = authorNameInput.value.trim() || "Aluno";
+            let xml = `<?xml version="1.0" encoding="UTF-8"?><score-partwise version="3.1"><work><work-title>${workTitle}</work-title></work><identification><creator type="composer">${author}</creator></identification><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list><part id="P1">`;
             sequence.forEach((item, i) => {
-                const x = padding + (i % cols) * mWidth;
-                const y = padding + 70 + Math.floor(i / cols) * mHeight;
-                ctx.strokeStyle = '#e2e8f0';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(x, y, mWidth - 4, mHeight - 4);
-                ctx.fillStyle = '#0ea5e9';
-                ctx.fillRect(x + mWidth - 7, y, 3, mHeight - 4);
-                ctx.fillStyle = '#94a3b8';
-                ctx.font = 'bold 16px monospace';
-                ctx.fillText(i + 1, x + 3, y + 15);
-                ctx.fillStyle = '#1e293b';
-                ctx.font = 'bold 13px Inter, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(getDisplayLabel(item.label), x + (mWidth / 2) - 3, y + (mHeight / 2) + 4);
-                ctx.textAlign = 'start';
+                const match = item.label.match(/^([A-G][#b]?)(.*)$/);
+                let root = match[1], type = match[2], step = root.charAt(0), alter = root.includes("#")?"1":(root.includes("b")?"-1":"0");
+                
+                // Mapeamento XML de precisão
+                let kind = "major", kindText = type;
+                if (type === "maj7") kind = "major-seventh";
+                else if (type === "9") kind = "dominant-ninth";
+                else if (type === "7(b9)" || type === "7b9") { kind = "dominant"; kindText = "7(b9)"; }
+                else if (type === "m7b5" || type === "m7(b5)") { kind = "half-diminished"; kindText = "m7(b5)"; }
+                else if (type === "m7") kind = "minor-seventh";
+                else if (type === "dim7") kind = "diminished-seventh";
+
+                xml += `<measure number="${i+1}">${i===0?`<attributes><divisions>1</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>` : ""}<harmony><root><root-step>${step}</root-step>${alter!=="0"?`<root-alter>${alter}</root-alter>` : ""}</root><kind text="${kindText}">${kind}</kind></harmony><note><rest/><duration>4</duration><type>whole</type></note></measure>`;
+            });
+            return xml + `</part></score-partwise>`;
+        }
+
+        function generateImageExport() {
+            const cols = 8, rows = Math.ceil(sequence.length / cols), mWidth = 140, mHeight = 40, padding = 20;
+            const workTitle = workTitleInput.value.trim() || "Trabalho Sem Título", author = authorNameInput.value.trim() || "Anónimo";
+            exportCanvas.width = (cols * mWidth) + (padding * 2); exportCanvas.height = (rows * mHeight) + (padding * 2) + 70;
+            const ctx = exportCanvas.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+            ctx.fillStyle = '#0ea5e9'; ctx.font = 'bold 24px Inter, sans-serif'; ctx.fillText(workTitle, padding, padding + 25);
+            ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = '#64748b'; ctx.fillText(`Autor: ${author}`, padding, padding + 45);
+            sequence.forEach((item, i) => {
+                const x = padding + (i % cols) * mWidth, y = padding + 70 + Math.floor(i / cols) * mHeight;
+                ctx.strokeStyle = '#e2e8f0'; ctx.strokeRect(x, y, mWidth - 4, mHeight - 4);
+                ctx.fillStyle = '#0ea5e9'; ctx.fillRect(x + mWidth - 7, y, 3, mHeight - 4);
+                ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 16px monospace'; ctx.fillText(i + 1, x + 3, y + 15);
+                ctx.fillStyle = '#1e293b'; ctx.font = 'bold 13px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(getDisplayLabel(item.label), x + (mWidth / 2) - 3, y + (mHeight / 2) + 4); ctx.textAlign = 'start';
             });
             exportCanvas.classList.remove('hidden');
         }
 
-        async function importProjectData(jsonStr) {
-            try {
-                await initAudioContext();
-                const data = JSON.parse(jsonStr);
-                const info = data.projeto || data;
-                if (!info.dados_harmonicos && !info.sequence) throw new Error("Inválido");
-                const ident = info.identificacao || { titulo: info.title || "", nome: info.author || "" };
-                const acordes = info.dados_harmonicos || info.sequence;
-                workTitleInput.value = ident.titulo || "";
-                authorNameInput.value = ident.nome || ident.author || "";
-                sequence = [];
-                statusText.innerText = "Lendo...";
-                for (const item of acordes) {
-                    const file = item.arquivo || item.file;
-                    const buffer = await loadSound(file);
-                    if (buffer) sequence.push({ label: item.label, buffer, file: file });
-                }
-                renderSequence();
-                statusText.innerText = "Pronto!";
-                return true;
-            } catch (e) {
-                statusText.innerText = "Erro!";
-                return false;
-            }
-        }
-
-        // --- BOTÕES MODAL ---
+        // --- HANDLERS ---
         document.getElementById('export-btn').onclick = () => { exportModal.classList.remove('hidden'); showExportView('data'); };
         document.getElementById('exp-img-btn').onclick = () => showExportView('img');
         document.getElementById('exp-mus-btn').onclick = () => showExportView('mus');
@@ -736,46 +591,47 @@
         document.getElementById('exp-biab-btn').onclick = () => showExportView('biab');
         document.getElementById('exp-data-btn').onclick = () => showExportView('data');
 
-        document.getElementById('trigger-open-btn').onclick = () => { fileImportInput.click(); };
+        document.getElementById('trigger-open-btn').onclick = () => fileImportInput.click();
         fileImportInput.onchange = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+            const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader();
-            reader.onload = async (ev) => { if (await importProjectData(ev.target.result)) exportModal.classList.add('hidden'); };
+            reader.onload = async (ev) => {
+                try {
+                    await initAudioContext();
+                    const data = JSON.parse(ev.target.result); const info = data.projeto || data;
+                    const acordes = info.dados_harmonicos || info.sequence;
+                    workTitleInput.value = (info.identificacao?.titulo || info.title || "");
+                    authorNameInput.value = (info.identificacao?.nome || info.author || "");
+                    sequence = []; statusText.innerText = "Lendo...";
+                    for (const item of acordes) {
+                        const f = item.arquivo || item.file; const buf = await loadSound(f);
+                        if (buf) sequence.push({ label: item.label, buffer: buf, file: f });
+                    }
+                    renderSequence(); statusText.innerText = "Pronto!"; exportModal.classList.add('hidden');
+                } catch(err) { statusText.innerText = "Erro!"; }
+                fileImportInput.value = '';
+            };
             reader.readAsText(file);
         };
 
         document.getElementById('download-project-btn').onclick = () => {
-            const blob = new Blob([getProjectData()], { type: 'text/plain' });
-            const link = document.createElement('a'); link.download = getSanitizedFilename('txt'); link.href = URL.createObjectURL(blob); link.click();
+            const blob = new Blob([JSON.stringify({projeto:{identificacao:{titulo:workTitleInput.value,nome:authorNameInput.value},dados_harmonicos:sequence.map(i=>({label:i.label,arquivo:i.file}))}},null,2)], { type: 'text/plain' });
+            const a = document.createElement('a'); a.download = getSanitizedFilename('txt'); a.href = URL.createObjectURL(blob); a.click();
         };
 
         document.getElementById('download-img-btn').onclick = () => {
-            const link = document.createElement('a'); link.download = getSanitizedFilename('png'); link.href = exportCanvas.toDataURL('image/png'); link.click();
+            const a = document.createElement('a'); a.download = getSanitizedFilename('png'); a.href = exportCanvas.toDataURL('image/png'); a.click();
         };
 
         document.getElementById('download-mus-btn').onclick = () => {
-            const title = workTitleInput.value || "Swing Project";
-            let xml = `<?xml version="1.0" encoding="UTF-8"?><score-partwise version="3.1"><work><work-title>${title}</work-title></work><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list><part id="P1">`;
-            sequence.forEach((item, i) => {
-                const match = item.label.match(/^([A-G][#b]?)(.*)$/);
-                let root = match[1], type = match[2], step = root.charAt(0), alter = root.includes("#")?"1":(root.includes("b")?"-1":"0");
-                let kind = type==="maj7"?"major-seventh":type==="9"?"dominant-ninth":type.includes("m7")?"minor-seventh":"major";
-                xml += `<measure number="${i+1}">${i===0?`<attributes><divisions>1</divisions><key><fifths>0</fifths></key><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>` : ""}<harmony><root><root-step>${step}</root-step>${alter!=="0"?`<root-alter>${alter}</root-alter>` : ""}</root><kind>${kind}</kind></harmony><note><rest/><duration>4</duration><type>whole</type></note></measure>`;
-            });
-            xml += `</part></score-partwise>`;
-            const blob = new Blob([xml], { type: 'text/xml' });
-            const link = document.createElement('a'); link.download = getSanitizedFilename('musicxml'); link.href = URL.createObjectURL(blob); link.click();
+            const blob = new Blob([getXmlExport()], { type: 'text/xml' });
+            const a = document.createElement('a'); a.download = getSanitizedFilename('musicxml'); a.href = URL.createObjectURL(blob); a.click();
         };
-
-        function getProjectData() {
-            return JSON.stringify({projeto:{identificacao:{titulo:workTitleInput.value,nome:authorNameInput.value},dados_harmonicos:sequence.map(i=>({label:i.label,arquivo:i.file}))}},null,2);
-        }
 
         function showExportView(type) {
             exportTextArea.classList.add('hidden'); exportCanvas.classList.add('hidden'); document.getElementById('data-action-area').classList.add('hidden');
             document.getElementById('copy-btn').classList.add('hidden'); document.getElementById('download-img-btn').classList.add('hidden'); document.getElementById('download-mus-btn').classList.add('hidden');
-            ['exp-img-btn','exp-tab-btn','exp-biab-btn','exp-mus-btn','exp-data-btn'].forEach(id => { document.getElementById(id).classList.remove('ring-2', 'ring-white', 'opacity-100'); document.getElementById(id).classList.add('opacity-80'); });
+            ['exp-img-btn','exp-tab-btn','exp-biab-btn','exp-mus-btn','exp-data-btn'].forEach(id => document.getElementById(id).classList.remove('ring-2', 'ring-white', 'opacity-100'));
 
             if (type === 'img') { generateImageExport(); document.getElementById('download-img-btn').classList.remove('hidden'); document.getElementById('exp-img-btn').classList.add('ring-2', 'ring-white', 'opacity-100'); }
             else if (type === 'mus') { document.getElementById('download-mus-btn').classList.remove('hidden'); document.getElementById('exp-mus-btn').classList.add('ring-2', 'ring-white', 'opacity-100'); }
@@ -785,8 +641,7 @@
                 if (type === 'tab') {
                     let text = `// TRABALHO: ${workTitleInput.value}\n| Compasso | Acorde |\n|-----------|---------|\n`;
                     sequence.forEach((it, idx) => text += `| ${idx+1} | ${getDisplayLabel(it.label)} |\n`);
-                    exportTextArea.value = text;
-                    document.getElementById('exp-tab-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
+                    exportTextArea.value = text; document.getElementById('exp-tab-btn').classList.add('ring-2', 'ring-white', 'opacity-100');
                 } else {
                     let biab = `// TRABALHO: ${workTitleInput.value}\n[Song]\n[Chords]\n|:a) `;
                     sequence.forEach(it => biab += it.label.replace(/\(|\)/g,"") + "| ");
@@ -799,24 +654,17 @@
         document.getElementById('close-modal').onclick = () => exportModal.classList.add('hidden');
         document.getElementById('copy-btn').onclick = () => { exportTextArea.select(); document.execCommand('copy'); statusText.innerText = "COPIADO"; setTimeout(() => statusText.innerText = "Pronto", 1500); };
 
-        // --- PLAYBACK ---
         async function play() {
             await initAudioContext();
             if (!sequence.length || isPlaying) return;
             isPlaying = true; editingIndex = null; menuActiveIndex = null; renderSequence(); toggleUI(true);
-            const now = audioCtx.currentTime;
-            const start = now + 0.15;
+            const now = audioCtx.currentTime, start = now + 0.15;
             sequence.forEach((item, i) => {
-                const time = start + (i * MEASURE_DURATION);
-                const stopT = time + MEASURE_DURATION + 0.1; 
+                const time = start + (i * MEASURE_DURATION), stopT = time + MEASURE_DURATION + 0.1; 
                 const source = audioCtx.createBufferSource(); const gain = audioCtx.createGain();
                 source.buffer = item.buffer;
                 gain.gain.setValueAtTime(0, time); gain.gain.linearRampToValueAtTime(1, time + 0.01); gain.gain.setValueAtTime(1, time + MEASURE_DURATION - 0.05); gain.gain.linearRampToValueAtTime(0, stopT);
-                
-                source.connect(gain);
-                gain.connect(masterGain);
-                if (reverbNode) gain.connect(reverbNode);
-                
+                source.connect(gain); gain.connect(masterGain); if (reverbNode) gain.connect(reverbNode);
                 source.start(time); source.stop(stopT); activeNodes.push({source, gain});
                 visualTimers.push(setTimeout(() => highlight(i), (time - now) * 1000));
             });
