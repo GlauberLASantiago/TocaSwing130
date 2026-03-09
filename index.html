@@ -159,8 +159,9 @@
             min-height: 24px;
         }
 
-        .chord-btn { font-size: 9px; padding: 2px 1px; height: 22px; cursor: pointer; border-radius: 4px; border: 1px solid transparent; }
-        .note-label { font-size: 10px; padding: 2px; height: 22px; font-weight: bold; }
+        /* Alturas fixas foram removidas aqui para permitir que as flexbox assumam a função no grid */
+        .chord-btn { font-size: 9px; padding: 2px 1px; cursor: pointer; border-radius: 4px; border: 1px solid transparent; }
+        .note-label { font-size: 10px; padding: 2px; font-weight: bold; }
 
         .options-overlay {
             position: absolute;
@@ -444,22 +445,26 @@
             gridContainer.innerHTML = '';
             noteData.forEach(note => {
                 const labelDiv = document.createElement('div');
-                labelDiv.className = 'flex items-center justify-center note-label card rounded border transition-colors';
+                // Adicionado w-full, h-full e min-h para preencher perfeitamente a célula do grid
+                labelDiv.className = 'flex items-center justify-center note-label card rounded border transition-colors w-full h-full min-h-[26px]';
                 labelDiv.innerText = note.display;
                 gridContainer.appendChild(labelDiv);
 
                 types.forEach(type => {
                     const cell = document.createElement('div');
+                    // Célula agora é um flex-container que repassa o "stretch" perfeito aos botões internos
+                    cell.className = 'flex gap-0.5 w-full h-full min-h-[26px]';
+
                     const fullLabel = (note.display.includes('/') ? note.display.split('/')[0] : note.display) + type.label;
                     const fileName = `swing130_${note.file}${type.suffix}.mp3`;
                     
                     if (note.display.includes('/')) {
                         const parts = note.display.split('/');
-                        cell.className = 'flex gap-0.5 h-[22px]';
                         parts.forEach(p => {
                             const btn = document.createElement('button');
                             const label = p + type.label;
-                            btn.className = 'chord-btn rounded font-semibold border-b shadow-sm transition-all flex-1 text-[7px] p-0';
+                            // Flex e layout adicionados para centralização no interior do botão "esticado"
+                            btn.className = 'chord-btn rounded font-semibold border-b shadow-sm transition-all flex-1 text-[7px] p-0 flex items-center justify-center leading-none';
                             btn.dataset.chord = label;
                             btn.innerText = getDisplayLabel(label);
                             btn.onclick = async () => { 
@@ -471,7 +476,8 @@
                         });
                     } else {
                         const btn = document.createElement('button');
-                        btn.className = 'chord-btn rounded font-semibold border-b shadow-sm transition-all w-full';
+                        // Flex e layout adicionados para centralização no interior do botão "esticado"
+                        btn.className = 'chord-btn rounded font-semibold border-b shadow-sm transition-all w-full flex items-center justify-center leading-none';
                         btn.dataset.chord = fullLabel;
                         btn.innerText = getDisplayLabel(fullLabel);
                         btn.onclick = async () => { 
