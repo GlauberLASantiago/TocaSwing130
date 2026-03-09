@@ -265,7 +265,7 @@
                 </div>
             </div>
             <div class="flex flex-col items-end gap-0.5">
-                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.3 | XML Export Fix</p>
+                <p class="text-[8px] opacity-30 font-mono uppercase">Swing Engine v7.4 | XML Harmony Fix</p>
                 <p class="text-[8px] opacity-40 font-medium italic">glauberlasantiago.github.io/TocaSwing130/</p>
             </div>
         </footer>
@@ -322,11 +322,14 @@
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 masterGain = audioCtx.createGain();
                 masterGain.connect(audioCtx.destination);
+                
                 reverbNode = audioCtx.createConvolver();
                 reverbGain = audioCtx.createGain();
                 reverbNode.buffer = createImpulse(2.0, 1.8); 
+                
                 reverbNode.connect(reverbGain);
                 reverbGain.connect(masterGain);
+                
                 updateReverbLevel(document.getElementById('reverb-slider').value);
             }
             if (audioCtx.state === 'suspended') await audioCtx.resume();
@@ -550,9 +553,10 @@
             let xml = `<?xml version="1.0" encoding="UTF-8"?><score-partwise version="3.1"><work><work-title>${workTitle}</work-title></work><identification><creator type="composer">${author}</creator></identification><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list><part id="P1">`;
             sequence.forEach((item, i) => {
                 const match = item.label.match(/^([A-G][#b]?)(.*)$/);
-                let root = match[1], type = match[2], step = root.charAt(0), alter = root.includes("#")?"1":(root.includes("b")?"-1":"0");
+                let root = match ? match[1] : "C", type = match ? match[2] : "";
+                let step = root.charAt(0).toUpperCase(), alter = root.includes("#")?"1":(root.includes("b")?"-1":"0");
                 
-                // Mapeamento XML de precisão
+                // Mapeamento XML de alta precisão
                 let kind = "major", kindText = type;
                 if (type === "maj7") kind = "major-seventh";
                 else if (type === "9") kind = "dominant-ninth";
